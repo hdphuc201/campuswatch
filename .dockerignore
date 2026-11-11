@@ -1,0 +1,17 @@
+# Keep build contexts small and free of secrets and local state.
+**/node_modules
+**/dist
+**/.output
+**/.wxt
+**/.turbo
+**/coverage
+.git
+.env
+.env.*
+!.env.example
+**/*.log
+**/*.pem
+**/*.key
+.serena
+.code-review-graph
+infra/data

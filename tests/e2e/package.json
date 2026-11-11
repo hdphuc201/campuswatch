@@ -1,0 +1,31 @@
+{
+  "name": "@campuswatch/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "description": "End-to-end pipeline test: CITD collector on fixtures, extension engine, API, notifications, and worker, against PostgreSQL.",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test:integration": "vitest run"
+  },
+  "devDependencies": {
+    "@campuswatch/citd-adapter": "workspace:*",
+    "@campuswatch/config": "workspace:*",
+    "@campuswatch/contracts": "workspace:*",
+    "@campuswatch/db": "workspace:*",
+    "@campuswatch/notifications": "workspace:*",
+    "@campuswatch/observability": "workspace:*",
+    "@campuswatch/portal-core": "workspace:*",
+    "@swc/core": "catalog:",
+    "@types/node": "catalog:",
+    "@types/pg": "8.23.1",
+    "drizzle-orm": "0.45.4",
+    "eslint": "catalog:",
+    "happy-dom": "21.0.4",
+    "pg": "8.23.1",
+    "typescript": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "@campuswatch/worker",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "CampusWatch background worker (NestJS + BullMQ).",
   "type": "module",
@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "config:check": "node --env-file-if-exists=../../.env dist/check-config.js"
   },
   "dependencies": {
     "@campuswatch/contracts": "workspace:*",

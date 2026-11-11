@@ -1,0 +1,108 @@
+# Staging stack: API, worker, migrations, PostgreSQL 16, Redis 7, and Caddy for HTTPS.
+# Usage (on the staging host, from the repository root):
+#   cp infra/deploy/staging.env.example infra/deploy/staging.env   # fill in; never commit it
+#   docker compose -f infra/deploy/docker-compose.staging.yml --env-file infra/deploy/staging.env up -d --build
+# See docs/runbooks/deployment.md.
+name: campuswatch-staging
+
+x-app-env: &app-env
+  NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-log}
+  DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+  REDIS_URL: redis://redis:6379
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: migrate
+    environment:
+      <<: *app-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: api
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET}
+      TRUST_PROXY_HOPS: '1'
+      OPS_METRICS_TOKEN: ${OPS_METRICS_TOKEN:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+      TELEGRAM_WEBHOOK_SECRET: ${TELEGRAM_WEBHOOK_SECRET:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+      target: worker
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:

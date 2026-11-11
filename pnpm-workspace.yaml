@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - tests/*
 
 # Shared versions for dependencies used by more than one workspace package.
 catalog:

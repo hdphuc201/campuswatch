@@ -18,12 +18,15 @@
     "infra:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d --wait",
     "infra:down": "docker compose --project-directory . -f infra/docker-compose.yml down",
     "db:migrate": "turbo run db:migrate",
-    "db:generate": "pnpm --filter @campuswatch/db db:generate"
+    "db:generate": "pnpm --filter @campuswatch/db db:generate",
+    "config:check": "turbo run config:check",
+    "release:extension": "node scripts/release-extension.mjs"
   },
   "prettier": "@campuswatch/config/prettier",
   "devDependencies": {
     "@campuswatch/config": "workspace:*",
     "prettier": "catalog:",
     "turbo": "2.11.10"
-  }
+  },
+  "version": "0.1.0"
 }

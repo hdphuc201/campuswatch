@@ -1,0 +1,8 @@
+# TLS termination for the API (automatic HTTPS certificates). Only the API is exposed.
+{$API_DOMAIN} {
+	encode gzip
+	# Metrics are for the internal scraper only.
+	@metrics path /ops/*
+	respond @metrics 404
+	reverse_proxy api:3000
+}

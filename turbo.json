@@ -51,6 +51,11 @@
         "RETENTION_HISTORY_DAYS",
         "RETENTION_OPERATIONAL_DAYS"
       ]
+    },
+    "config:check": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["*"]
     }
   }
 }
