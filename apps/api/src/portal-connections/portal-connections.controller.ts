@@ -53,6 +53,24 @@ export class PortalConnectionsController {
     return this.connections.remove(userId, connectionId);
   }
 
+  @Post(':id/pause')
+  @HttpCode(200)
+  pause(
+    @CurrentUserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) connectionId: string,
+  ): Promise<PortalConnection> {
+    return this.connections.pause(userId, connectionId);
+  }
+
+  @Post(':id/resume')
+  @HttpCode(200)
+  resume(
+    @CurrentUserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) connectionId: string,
+  ): Promise<PortalConnection> {
+    return this.connections.resume(userId, connectionId);
+  }
+
   /** Called by the extension with its device token; the device's owner must own the connection. */
   @DeviceAuth()
   @Post(':id/probe')

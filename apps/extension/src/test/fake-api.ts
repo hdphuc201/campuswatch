@@ -1,0 +1,206 @@
+import type { ConnectionHealthState, PortalConnection } from '@campuswatch/contracts';
+
+interface FakeConnection extends PortalConnection {
+  userEmail: string;
+}
+
+/**
+ * In-memory stand-in for the CampusWatch API with the same auth rules: rotating single-use
+ * refresh tokens, device tokens only on device routes, owner-scoped resources, paused
+ * connections immune to probes.
+ */
+export function createFakeApi() {
+  const users = new Map<string, string>();
+  const accessTokens = new Map<string, string>();
+  const refreshTokens = new Map<string, string>();
+  const devices = new Map<string, { id: string; email: string; revoked: boolean }>();
+  const connections = new Map<string, FakeConnection>();
+  const calls: string[] = [];
+  let counter = 0;
+  let offline = false;
+  let failNext: number | undefined;
+  const id = () => `00000000-0000-4000-8000-${String(++counter).padStart(12, '0')}`;
+
+  const json = (status: number, body?: unknown) =>
+    new Response(body === undefined ? null : JSON.stringify(body), {
+      status,
+      headers: { 'content-type': 'application/json' },
+    });
+
+  const issueTokens = (email: string) => {
+    const accessToken = `access-${++counter}`;
+    const refreshToken = `cwr_${++counter}`;
+    accessTokens.set(accessToken, email);
+    refreshTokens.set(refreshToken, email);
+    return {
+      tokenType: 'Bearer',
+      accessToken,
+      accessTokenExpiresAt: new Date(Date.now() + 900_000).toISOString(),
+      refreshToken,
+      refreshTokenExpiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+    };
+  };
+
+  const handle = (input: Parameters<typeof globalThis.fetch>[0], init?: RequestInit): Response => {
+    const url = new URL(typeof input === 'string' ? input : (input as Request).url);
+    const method = init?.method ?? 'GET';
+    const path = url.pathname;
+    calls.push(`${method} ${path}`);
+    if (offline) {
+      throw new TypeError('Failed to fetch');
+    }
+    if (failNext !== undefined) {
+      const status = failNext;
+      failNext = undefined;
+      return json(status, { message: 'injected failure' });
+    }
+    const body = init?.body ? (JSON.parse(init.body as string) as Record<string, string>) : {};
+    const bearer = new Headers(init?.headers).get('authorization')?.replace(/^Bearer /, '');
+    const userEmail = bearer ? accessTokens.get(bearer) : undefined;
+    const device = bearer
+      ? [...devices.values()].find((d) => `cwd_${d.id}` === bearer && !d.revoked)
+      : undefined;
+
+    if (method === 'POST' && path === '/auth/register') {
+      if (users.has(body.email!)) {
+        return json(409, { message: 'An account with this email already exists' });
+      }
+      users.set(body.email!, body.password!);
+      return json(201, issueTokens(body.email!));
+    }
+    if (method === 'POST' && path === '/auth/login') {
+      return users.get(body.email!) === body.password
+        ? json(200, issueTokens(body.email!))
+        : json(401, { message: 'Invalid email or password' });
+    }
+    if (method === 'POST' && path === '/auth/refresh') {
+      const email = refreshTokens.get(body.refreshToken!);
+      if (!email) {
+        return json(401, { message: 'Invalid refresh token' });
+      }
+      refreshTokens.delete(body.refreshToken!);
+      return json(200, issueTokens(email));
+    }
+    if (method === 'POST' && path === '/auth/logout') {
+      refreshTokens.delete(body.refreshToken!);
+      return json(204);
+    }
+
+    const probeMatch = /^\/portal-connections\/([^/]+)\/probe$/.exec(path);
+    if (probeMatch) {
+      const connection = connections.get(probeMatch[1]!);
+      if (!device) {
+        return json(401);
+      }
+      if (!connection || connection.userEmail !== device.email) {
+        return json(404);
+      }
+      if (connection.status !== 'PAUSED') {
+        const status: Record<string, ConnectionHealthState> = {
+          authenticated: 'CONNECTED',
+          login_required: 'LOGIN_REQUIRED',
+          unavailable: 'PORTAL_UNAVAILABLE',
+        };
+        connection.status = status[body.result!]!;
+        connection.lastProbedAt = new Date().toISOString();
+      }
+      return json(200, strip(connection));
+    }
+
+    if (!userEmail) {
+      return json(401);
+    }
+    if (method === 'POST' && path === '/devices/register') {
+      const deviceId = id();
+      devices.set(deviceId, { id: deviceId, email: userEmail, revoked: false });
+      return json(201, {
+        device: {
+          id: deviceId,
+          name: body.name,
+          extensionVersion: body.extensionVersion,
+          createdAt: new Date().toISOString(),
+          lastSeenAt: null,
+        },
+        deviceToken: `cwd_${deviceId}`,
+      });
+    }
+    const deviceMatch = /^\/devices\/([^/]+)$/.exec(path);
+    if (method === 'DELETE' && deviceMatch) {
+      const target = devices.get(deviceMatch[1]!);
+      if (!target || target.email !== userEmail) {
+        return json(404);
+      }
+      target.revoked = true;
+      return json(204);
+    }
+    if (path === '/portal-connections') {
+      const own = [...connections.values()].filter((c) => c.userEmail === userEmail);
+      if (method === 'GET') {
+        return json(200, { connections: own.map(strip) });
+      }
+      if (own.length > 0) {
+        return json(409, { message: 'A connection for this Portal already exists' });
+      }
+      const connection: FakeConnection = {
+        id: id(),
+        userEmail,
+        adapterKey: 'citd',
+        status: 'LOGIN_REQUIRED',
+        consentVersion: body.consentVersion!,
+        lastProbedAt: null,
+        lastSyncAt: null,
+        createdAt: new Date().toISOString(),
+      };
+      connections.set(connection.id, connection);
+      return json(201, strip(connection));
+    }
+    const connectionMatch = /^\/portal-connections\/([^/]+)(?:\/(pause|resume))?$/.exec(path);
+    if (connectionMatch) {
+      const connection = connections.get(connectionMatch[1]!);
+      if (!connection || connection.userEmail !== userEmail) {
+        return json(404);
+      }
+      if (method === 'DELETE') {
+        connections.delete(connection.id);
+        return json(204);
+      }
+      if (connectionMatch[2] === 'pause') {
+        connection.status = 'PAUSED';
+      } else if (connectionMatch[2] === 'resume' && connection.status === 'PAUSED') {
+        connection.status = 'LOGIN_REQUIRED';
+      }
+      return json(200, strip(connection));
+    }
+    return json(404);
+  };
+
+  const fetch: typeof globalThis.fetch = (input, init) => {
+    try {
+      return Promise.resolve(handle(input, init));
+    } catch (error) {
+      return Promise.reject(error instanceof Error ? error : new Error(String(error)));
+    }
+  };
+
+  return {
+    fetch,
+    calls,
+    connections,
+    devices,
+    /** Expires every access token, as if 15 minutes passed. */
+    expireAccessTokens: () => accessTokens.clear(),
+    setOffline: (value: boolean) => {
+      offline = value;
+    },
+    failNextRequest: (status: number) => {
+      failNext = status;
+    },
+  };
+}
+
+function strip(connection: FakeConnection): PortalConnection {
+  const { userEmail: _userEmail, ...rest } = connection;
+  return rest;
+}
+
+export type FakeApi = ReturnType<typeof createFakeApi>;

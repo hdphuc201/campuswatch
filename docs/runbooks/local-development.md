@@ -127,12 +127,22 @@ against a PostgreSQL 16 service, and a gitleaks scan of the full git history.
 
 ## Loading the extension in Chrome
 
-1. `pnpm --filter @campuswatch/extension build`
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Click **Load unpacked** and select `apps/extension/.output/chrome-mv3`.
-4. Click the CampusWatch toolbar icon. The popup shows **CampusWatch foundation ready**.
+1. Start the API (`pnpm dev`, or `pnpm --filter @campuswatch/api dev`) with migrations
+   applied. Set `AUTH_SECRET` in `.env` so sessions survive API restarts.
+2. Build the extension: `pnpm --filter @campuswatch/extension build`. It talks to
+   `WXT_API_BASE_URL` (default `http://127.0.0.1:3000`), fixed at build time; for another
+   API run `WXT_API_BASE_URL=https://api.example.edu pnpm --filter @campuswatch/extension build`.
+3. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and
+   select `apps/extension/.output/chrome-mv3` (or `.output/chrome-mv3-dev` while
+   `pnpm dev` is running; WXT reloads it on every change).
+4. Open the CampusWatch popup, create a CampusWatch account (not your Portal password),
+   accept the consent screen, and connect.
+5. Debug the background service worker from `chrome://extensions` → CampusWatch →
+   **Service worker** → Inspect. `chrome.storage.local` is visible under Application →
+   Storage; it must only contain the keys listed in ADR-0003.
 
-The P1 extension requests no permissions and makes no network requests.
+The extension requests `storage` and `alarms` plus host access to the CITD Portal and the
+API origin. See [ADR-0003](../ADR/0003-extension-shell.md) for the sync lifecycle.
 
 ## Troubleshooting
 

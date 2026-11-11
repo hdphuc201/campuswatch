@@ -8,9 +8,8 @@ The Backend never stores Portal passwords, cookies, or CSRF tokens, and monitori
 while Chrome is running. See [ADR-0001](docs/ADR/0001-extension-first.md) and the
 [implementation plan](docs/CAMPUSWATCH_OFFICIAL_IMPLEMENTATION_PLAN.md).
 
-> **Status: P2 (identity and multi-user core).** The API has CampusWatch accounts, devices,
-> and Portal connections with per-user isolation ([ADR-0002](docs/ADR/0002-identity-and-isolation.md)).
-> No Portal collector exists yet; the extension does not read the Portal.
+> **Status:** see [docs/AUTOPILOT_STATUS.md](docs/AUTOPILOT_STATUS.md) for phase progress.
+> Architecture decisions are in [docs/ADR](docs/ADR).
 
 ## Repository layout
 
@@ -65,7 +64,8 @@ scans the full git history for secrets with gitleaks.
 1. `pnpm --filter @campuswatch/extension build`
 2. Open `chrome://extensions` and enable **Developer mode**.
 3. Click **Load unpacked** and select `apps/extension/.output/chrome-mv3`.
-4. Open the CampusWatch popup. It shows **CampusWatch foundation ready**.
+4. Open the CampusWatch popup, create a CampusWatch account, accept the consent screen,
+   and connect. Details: [runbook](docs/runbooks/local-development.md#loading-the-extension-in-chrome).
 
 ## Security rules
 

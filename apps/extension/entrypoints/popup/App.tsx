@@ -1,21 +1,31 @@
-import { citdCapabilities } from '@campuswatch/portal-core';
+import { AuthForm, ConsentView, Dashboard } from '../../src/popup/components.js';
+import { ERROR_MESSAGES } from '../../src/popup/status.js';
+import { useExtension } from '../../src/popup/use-extension.js';
 
 export function App() {
-  const adapterStatus =
-    citdCapabilities.implementationStatus === 'implemented' ? 'Ready' : 'Not implemented yet';
+  const { view, busy, error, run } = useExtension();
 
   return (
     <main className="popup">
       <h1>CampusWatch</h1>
-      <p className="status" role="status">
-        CampusWatch foundation ready
-      </p>
-      <dl>
-        <dt>{citdCapabilities.displayName} adapter</dt>
-        <dd>{adapterStatus}</dd>
-        <dt>Monitoring</dt>
-        <dd>Off. This build does not read the Portal.</dd>
-      </dl>
+      {error ? (
+        <p className="error" role="alert">
+          {ERROR_MESSAGES[error]}
+        </p>
+      ) : null}
+      {!view ? (
+        <p className="hint">Loading…</p>
+      ) : !view.signedIn ? (
+        <AuthForm busy={busy} onSubmit={(command) => void run(command)} />
+      ) : !view.connection ? (
+        <ConsentView
+          busy={busy}
+          onAccept={() => void run({ type: 'connect' })}
+          onSignOut={() => void run({ type: 'signOut' })}
+        />
+      ) : (
+        <Dashboard view={view} now={new Date()} busy={busy} onCommand={(c) => void run(c)} />
+      )}
     </main>
   );
 }

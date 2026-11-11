@@ -2,11 +2,32 @@
   color-scheme: light dark;
   font-family: system-ui, sans-serif;
   font-size: 14px;
+  --ok-bg: #e7f6ec;
+  --ok-fg: #14532d;
+  --warn-bg: #fff4d6;
+  --warn-fg: #713f12;
+  --error-bg: #fde8e8;
+  --error-fg: #7f1d1d;
+  --neutral-bg: #eef1f5;
+  --neutral-fg: #1f2937;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ok-bg: #12351f;
+    --ok-fg: #bbf7d0;
+    --warn-bg: #3a2d0b;
+    --warn-fg: #fde68a;
+    --error-bg: #3b1212;
+    --error-fg: #fecaca;
+    --neutral-bg: #1f2937;
+    --neutral-fg: #e5e7eb;
+  }
 }
 
 body {
   margin: 0;
-  min-width: 300px;
+  width: 340px;
 }
 
 .popup {
@@ -14,17 +35,106 @@ body {
 }
 
 h1 {
-  margin: 0 0 8px;
+  margin: 0 0 12px;
   font-size: 18px;
 }
 
-.status {
-  margin: 0 0 12px;
+h2 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+input {
+  padding: 6px 8px;
+  font: inherit;
+}
+
+button {
+  padding: 7px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-decoration: underline;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hint {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 12px;
+}
+
+.error {
+  margin: 0 0 10px;
   padding: 8px 10px;
   border-radius: 6px;
-  background: #e7f6ec;
-  color: #14532d;
-  font-weight: 600;
+  background: var(--error-bg);
+  color: var(--error-fg);
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.status-ok {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+
+.status-warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.status-error {
+  background: var(--error-bg);
+  color: var(--error-fg);
+}
+
+.status-neutral {
+  background: var(--neutral-bg);
+  color: var(--neutral-fg);
+}
+
+.consent {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 dl {
@@ -40,11 +150,4 @@ dt {
 
 dd {
   margin: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .status {
-    background: #12351f;
-    color: #bbf7d0;
-  }
 }
