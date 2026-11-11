@@ -13,16 +13,17 @@ while Chrome is running. See [ADR-0001](docs/ADR/0001-extension-first.md) and th
 
 ## Repository layout
 
-| Path                   | Purpose                                                                 |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `apps/extension`       | Chrome Extension: WXT, React, TypeScript, Manifest V3                   |
-| `apps/api`             | HTTP API: NestJS on Fastify, PostgreSQL via Drizzle                     |
-| `apps/worker`          | Background worker: NestJS and BullMQ                                    |
-| `packages/contracts`   | Shared Zod schemas and DTO types                                        |
-| `packages/portal-core` | Read-only Portal adapter contract, CITD capabilities, fingerprint, diff |
-| `packages/config`      | Shared TypeScript, ESLint, and Prettier configuration                   |
-| `infra`                | Docker Compose for local PostgreSQL 16 and Redis 7                      |
-| `docs`                 | ADRs and runbooks                                                       |
+| Path                    | Purpose                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `apps/extension`        | Chrome Extension: WXT, React, TypeScript, Manifest V3                   |
+| `apps/api`              | HTTP API: NestJS on Fastify, PostgreSQL via Drizzle                     |
+| `apps/worker`           | Background worker: NestJS and BullMQ                                    |
+| `packages/contracts`    | Shared Zod schemas and DTO types                                        |
+| `packages/citd-adapter` | Read-only CITD Portal collectors (page profile, parsers, normalization) |
+| `packages/portal-core`  | Read-only Portal adapter contract, CITD capabilities, fingerprint, diff |
+| `packages/config`       | Shared TypeScript, ESLint, and Prettier configuration                   |
+| `infra`                 | Docker Compose for local PostgreSQL 16 and Redis 7                      |
+| `docs`                  | ADRs and runbooks                                                       |
 
 ## Prerequisites
 

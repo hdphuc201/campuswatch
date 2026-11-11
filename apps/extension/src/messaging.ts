@@ -21,6 +21,8 @@ export interface ExtensionView {
   readonly connection?: StoredConnection;
   readonly sync: SyncState;
   readonly adapterAvailable: boolean;
+  /** True while Portal reading is tested only against synthetic fixtures. */
+  readonly adapterBeta: boolean;
   readonly consentVersion: string;
   readonly manualSyncAvailableAt?: string;
 }

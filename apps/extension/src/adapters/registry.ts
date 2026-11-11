@@ -1,10 +1,8 @@
 import type { PortalAdapter } from '@campuswatch/portal-core';
+import { CitdExtensionAdapter } from './citd/citd-extension-adapter.js';
+import { createChromeTabDriver } from './citd/chrome-tab-driver.js';
 
-/**
- * Portal adapter used by this build, or `null` when none is available. The CITD collectors
- * are added in phase P4; until then the extension reports that Portal reading is unavailable
- * instead of pretending to sync.
- */
-export function getPortalAdapter(): PortalAdapter | null {
-  return null;
+/** The Portal adapter used by this build. Only CITD is supported (plan section 16). */
+export function getPortalAdapter(): PortalAdapter {
+  return new CitdExtensionAdapter(createChromeTabDriver());
 }

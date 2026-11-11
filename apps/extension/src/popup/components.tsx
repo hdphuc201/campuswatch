@@ -143,6 +143,11 @@ export function Dashboard(props: {
         </p>
       ) : null}
       <p className="hint">CampusWatch only checks while Chrome is running.</p>
+      {view.adapterBeta ? (
+        <p className="hint">
+          Portal reading is in beta: if something looks wrong, check the Portal directly.
+        </p>
+      ) : null}
       <div className="row">
         <button type="button" className="link" onClick={() => onCommand({ type: 'disconnect' })}>
           Disconnect Portal

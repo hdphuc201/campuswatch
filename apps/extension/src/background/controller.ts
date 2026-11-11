@@ -17,6 +17,7 @@ export interface ControllerDeps {
   readonly scheduler: SyncScheduler;
   readonly extensionVersion: string;
   readonly adapterAvailable: boolean;
+  readonly adapterBeta: boolean;
   readonly now: () => Date;
 }
 
@@ -70,6 +71,7 @@ export class ExtensionController {
       ...(connection ? { connection } : {}),
       sync,
       adapterAvailable: this.deps.adapterAvailable,
+      adapterBeta: this.deps.adapterBeta,
       consentVersion: CONSENT_VERSION,
       ...(manualAvailableAt > this.deps.now().getTime()
         ? { manualSyncAvailableAt: new Date(manualAvailableAt).toISOString() }

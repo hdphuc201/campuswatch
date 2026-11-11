@@ -1,19 +1,21 @@
 import type { AdapterCapabilities } from './adapter.js';
 
 /**
- * Capability declaration for the CITD Portal adapter. No collector exists yet:
- * collectors are built in phase P4, one source at a time, from redacted fixtures.
+ * Capability declaration for the CITD Portal adapter (`@campuswatch/citd-adapter`).
+ * Collectors exist for every verified source, but they are built from synthetic fixtures:
+ * `liveVerified` stays false until a read-only check against the live Portal.
  */
 export const citdCapabilities: AdapterCapabilities = Object.freeze({
   adapterKey: 'citd',
   displayName: 'CITD Portal',
-  implementationStatus: 'unimplemented',
+  implementationStatus: 'implemented',
   readOnly: true,
+  liveVerified: false,
   sources: Object.freeze({
-    grades: 'planned',
-    tuition: 'planned',
-    timetable: 'planned',
-    exams: 'planned',
-    dashboardNotices: 'planned',
+    grades: 'supported',
+    tuition: 'supported',
+    timetable: 'supported',
+    exams: 'supported',
+    dashboardNotices: 'supported',
   }),
 });

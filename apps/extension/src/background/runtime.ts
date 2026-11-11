@@ -45,6 +45,7 @@ export function createRuntime(adapter: PortalAdapter | null) {
     scheduler: alarmScheduler,
     extensionVersion: browser.runtime.getManifest().version,
     adapterAvailable: adapter?.capabilities().implementationStatus === 'implemented',
+    adapterBeta: adapter?.capabilities().liveVerified === false,
     now,
   });
   return { engine, controller };

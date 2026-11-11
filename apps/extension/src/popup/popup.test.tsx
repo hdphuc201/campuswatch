@@ -21,6 +21,7 @@ function view(patch: Partial<ExtensionView> = {}): ExtensionView {
     },
     sync: INITIAL_SYNC_STATE,
     adapterAvailable: true,
+    adapterBeta: false,
     consentVersion: '2026-11',
     ...patch,
   };
@@ -93,6 +94,13 @@ describe('popup screens', () => {
     expect(html).toContain('only while Chrome is running');
     expect(html).toContain('Nothing is checked while Chrome or your computer is off');
     expect(html).toContain('Portal password, cookies, or page contents');
+  });
+
+  it('dashboard labels Portal reading as beta until it is verified against the live Portal', () => {
+    const html = renderToStaticMarkup(
+      <Dashboard view={view({ adapterBeta: true })} now={NOW} busy={false} onCommand={noop} />,
+    );
+    expect(html).toContain('Portal reading is in beta');
   });
 
   it('dashboard offers Resume while paused and disables Sync now', () => {

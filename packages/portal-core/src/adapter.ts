@@ -21,6 +21,11 @@ export interface AdapterCapabilities {
   /** Adapters only read data. A write-capable adapter is not allowed. */
   readonly readOnly: true;
   readonly sources: Readonly<Record<PortalDataSource, SourceSupport>>;
+  /**
+   * False while the collectors are only tested against synthetic fixtures. The UI labels such
+   * adapters as beta; flip it only after a read-only check against the live Portal.
+   */
+  readonly liveVerified: boolean;
 }
 
 export type SessionProbeResult =
@@ -61,4 +66,6 @@ export interface PortalAdapter {
   collectExams(context: CollectContext): Promise<CollectResult>;
   collectDashboardNotices(context: CollectContext): Promise<CollectResult>;
   classifyError(error: unknown): AdapterErrorCode;
+  /** Releases per-run resources (for example a Portal tab the adapter opened). */
+  dispose?(): Promise<void>;
 }

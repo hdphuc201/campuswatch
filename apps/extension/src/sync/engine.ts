@@ -134,6 +134,8 @@ export class SyncEngine {
             : 'portal_unavailable';
     } catch (error) {
       result = this.classify(error, adapter);
+    } finally {
+      await adapter.dispose?.().catch(() => undefined);
     }
     await this.finish(result);
     return result;

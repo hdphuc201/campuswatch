@@ -19,7 +19,8 @@ export default defineConfig({
     description: 'Notifies you when your CITD Portal academic data changes.',
     // Least privilege (implementation plan, section 6.1). `cookies` is never requested,
     // and there is no access to websites other than the Portal and the CampusWatch API.
-    permissions: ['storage', 'alarms'],
+    // `scripting` injects the read-only collector into a Portal tab on demand.
+    permissions: ['storage', 'alarms', 'scripting'],
     host_permissions: [PORTAL_HOST_PERMISSION, apiHostPermission()],
   },
 });

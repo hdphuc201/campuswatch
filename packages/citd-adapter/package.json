@@ -1,0 +1,35 @@
+{
+  "name": "@campuswatch/citd-adapter",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Read-only CITD Portal collectors: page profile, parsers, and normalization. Runs inside the student's own Portal tab.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@campuswatch/contracts": "workspace:*",
+    "@campuswatch/portal-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@campuswatch/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "happy-dom": "21.0.4",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

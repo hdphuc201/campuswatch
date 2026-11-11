@@ -95,6 +95,7 @@ export function createHarness(options: { adapter?: PortalAdapter | null; backend
     scheduler,
     extensionVersion: '0.1.0',
     adapterAvailable: adapter?.capabilities().implementationStatus === 'implemented',
+    adapterBeta: false,
     now: clock.now,
   });
   return { backend, store, state, api, outbox, scheduler, adapter, engine, controller, clock };

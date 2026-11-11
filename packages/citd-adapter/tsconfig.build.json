@@ -1,0 +1,10 @@
+{
+  "extends": "@campuswatch/config/tsconfig/node.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/test-support.ts"]
+}
