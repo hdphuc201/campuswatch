@@ -1,5 +1,16 @@
-import type { ProbeReportRequest } from '@campuswatch/contracts';
-import type { AdapterErrorCode, PortalAdapter, SessionProbeResult } from '@campuswatch/portal-core';
+import {
+  PORTAL_DATA_SOURCES,
+  type PortalDataSource,
+  type ProbeReportRequest,
+  type SourceSnapshot,
+} from '@campuswatch/contracts';
+import type {
+  AdapterErrorCode,
+  CollectContext,
+  CollectResult,
+  PortalAdapter,
+  SessionProbeResult,
+} from '@campuswatch/portal-core';
 import { ApiError, type CampusWatchApi } from '../api/client.js';
 import { SYNC_POLICY } from '../config.js';
 import {
@@ -48,9 +59,32 @@ const ADAPTER_ERROR_RESULT: Record<AdapterErrorCode, SyncResult> = {
   NETWORK_ERROR: 'network_error',
 };
 
+/** Error details sent to the API: page and field names only, in a strict character set. */
+function safeDetail(error: unknown): string {
+  const detail = (error as { detail?: unknown } | null)?.detail;
+  return typeof detail === 'string' && /^[\w .,:;()/#-]{1,200}$/.test(detail)
+    ? detail
+    : 'collector error';
+}
+
+/** Overall local result of a run that read the Portal. */
+function resultFromSources(sources: SourceSnapshot[]): SyncResult {
+  const codes = sources.flatMap((source) => (source.status === 'error' ? [source.errorCode] : []));
+  if (codes.includes('LOGIN_REQUIRED')) {
+    return 'login_required';
+  }
+  if (codes.includes('ADAPTER_NEEDS_UPDATE')) {
+    return 'adapter_needs_update';
+  }
+  if (codes.length === sources.length) {
+    return codes[0] === 'NETWORK_ERROR' ? 'network_error' : 'portal_unavailable';
+  }
+  return 'ok';
+}
+
 /**
- * One sync run: flush queued requests, probe the Portal session, report it, and schedule
- * the next run. Never reports success unless the Portal was actually read.
+ * One sync run: flush queued requests, probe the Portal session, collect every source,
+ * upload one snapshot (or report the probe), and schedule the next run. Never reports success unless the Portal was actually read.
  */
 export class SyncEngine {
   constructor(private readonly deps: SyncEngineDeps) {}
@@ -121,17 +155,28 @@ export class SyncEngine {
     try {
       const signal = AbortSignal.timeout(SYNC_POLICY.portalTimeoutMs);
       const probe = await adapter.probeSession({ signal });
-      await this.sendOrQueue({
-        kind: 'probe',
-        connectionId: connection.id,
-        report: { result: PROBE_RESULT[probe.state] },
-      });
-      result =
-        probe.state === 'authenticated'
-          ? 'ok'
-          : probe.state === 'login_required'
-            ? 'login_required'
-            : 'portal_unavailable';
+      if (probe.state === 'authenticated') {
+        // A snapshot upload also updates the connection status on the server.
+        const sources = await this.collectAll(adapter, signal);
+        await this.sendOrQueue({
+          kind: 'snapshot',
+          connectionId: connection.id,
+          snapshot: {
+            connectionId: connection.id,
+            syncRunId: crypto.randomUUID(),
+            collectedAt: this.deps.now().toISOString(),
+            sources,
+          },
+        });
+        result = resultFromSources(sources);
+      } else {
+        await this.sendOrQueue({
+          kind: 'probe',
+          connectionId: connection.id,
+          report: { result: PROBE_RESULT[probe.state] },
+        });
+        result = probe.state === 'login_required' ? 'login_required' : 'portal_unavailable';
+      }
     } catch (error) {
       result = this.classify(error, adapter);
     } finally {
@@ -141,8 +186,40 @@ export class SyncEngine {
     return result;
   }
 
+  /** Collects every source; one failing source does not stop the others. */
+  private async collectAll(adapter: PortalAdapter, signal: AbortSignal): Promise<SourceSnapshot[]> {
+    const collectors: Record<
+      PortalDataSource,
+      (context: CollectContext) => Promise<CollectResult>
+    > = {
+      grades: (context) => adapter.collectGrades(context),
+      tuition: (context) => adapter.collectTuition(context),
+      timetable: (context) => adapter.collectTimetable(context),
+      exams: (context) => adapter.collectExams(context),
+      dashboardNotices: (context) => adapter.collectDashboardNotices(context),
+    };
+    const sources: SourceSnapshot[] = [];
+    for (const source of PORTAL_DATA_SOURCES) {
+      try {
+        const { entities } = await collectors[source]({ signal });
+        sources.push({ source, status: 'ok', entities: [...entities] });
+      } catch (error) {
+        const errorCode = adapter.classifyError(error);
+        sources.push({ source, status: 'error', errorCode, errorDetail: safeDetail(error) });
+        if (errorCode === 'LOGIN_REQUIRED') {
+          // The session ended mid-run: reading further pages cannot succeed.
+          break;
+        }
+      }
+    }
+    return sources;
+  }
+
   private async send(payload: OutboxPayload): Promise<void> {
-    const updated = await this.deps.api.reportProbe(payload.connectionId, payload.report);
+    const updated =
+      payload.kind === 'snapshot'
+        ? (await this.deps.api.uploadSnapshot(payload.snapshot)).connection
+        : await this.deps.api.reportProbe(payload.connectionId, payload.report);
     const stored = await this.deps.state.getConnection();
     if (stored?.id === updated.id) {
       await this.deps.state.setConnection({

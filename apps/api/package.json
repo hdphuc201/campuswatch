@@ -11,12 +11,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file-if-exists=../../.env dist/migrate.js"
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@campuswatch/contracts": "workspace:*",
+    "@campuswatch/db": "workspace:*",
+    "@campuswatch/portal-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "@nestjs/platform-fastify": "12.4.2",
@@ -35,7 +35,6 @@
     "@swc/core": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "8.23.1",
-    "drizzle-kit": "0.31.11",
     "eslint": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "catalog:",

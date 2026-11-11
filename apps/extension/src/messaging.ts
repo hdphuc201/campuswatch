@@ -1,3 +1,4 @@
+import type { ChangeEvent } from '@campuswatch/contracts';
 import type { StoredConnection, SyncState } from './storage/extension-state.js';
 import type { SyncOutcome } from './sync/engine.js';
 
@@ -11,7 +12,8 @@ export type Command =
   | { readonly type: 'disconnect' }
   | { readonly type: 'pause' }
   | { readonly type: 'resume' }
-  | { readonly type: 'syncNow' };
+  | { readonly type: 'syncNow' }
+  | { readonly type: 'getChanges' };
 
 /** What the popup renders. Contains no tokens. */
 export interface ExtensionView {
@@ -38,7 +40,13 @@ export type UserErrorCode =
   | 'unexpected';
 
 export type CommandResult =
-  | { readonly ok: true; readonly view: ExtensionView; readonly outcome?: SyncOutcome }
+  | {
+      readonly ok: true;
+      readonly view: ExtensionView;
+      readonly outcome?: SyncOutcome;
+      /** Present for `getChanges`: the most recent changes, newest first. */
+      readonly changes?: ChangeEvent[];
+    }
   | {
       readonly ok: false;
       readonly error: { readonly code: UserErrorCode };
@@ -55,6 +63,7 @@ export const COMMAND_TYPES: readonly Command['type'][] = [
   'pause',
   'resume',
   'syncNow',
+  'getChanges',
 ];
 
 /** Rejects anything that is not a well-formed command (messages can come from any page script). */

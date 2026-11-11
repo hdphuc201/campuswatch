@@ -29,15 +29,14 @@ describe('SyncEngine', () => {
     expect(harness.scheduler.active).toBeNull();
   });
 
-  it('probes right after connecting and schedules the next run about 30 minutes later', async () => {
+  it('syncs right after connecting and schedules the next run about 30 minutes later', async () => {
     const { state, scheduler, backend } = await connected();
 
     expect((await state.getConnection())?.status).toBe('CONNECTED');
     expect((await state.getSync()).lastResult).toBe('ok');
     expect(scheduler.active).toBe(30);
-    expect(backend.calls).toContain(
-      `POST /portal-connections/${(await state.getConnection())!.id}/probe`,
-    );
+    // Logged in: the snapshot upload carries the session state (no separate probe report).
+    expect(backend.calls).toContain('POST /sync-runs');
   });
 
   it('stops polling on LOGIN_REQUIRED and resumes after a Portal login', async () => {

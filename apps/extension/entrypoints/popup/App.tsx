@@ -1,9 +1,9 @@
-import { AuthForm, ConsentView, Dashboard } from '../../src/popup/components.js';
+import { AuthForm, ConsentView, Dashboard, RecentChanges } from '../../src/popup/components.js';
 import { ERROR_MESSAGES } from '../../src/popup/status.js';
 import { useExtension } from '../../src/popup/use-extension.js';
 
 export function App() {
-  const { view, busy, error, run } = useExtension();
+  const { view, busy, error, changes, run } = useExtension();
 
   return (
     <main className="popup">
@@ -24,7 +24,10 @@ export function App() {
           onSignOut={() => void run({ type: 'signOut' })}
         />
       ) : (
-        <Dashboard view={view} now={new Date()} busy={busy} onCommand={(c) => void run(c)} />
+        <>
+          <Dashboard view={view} now={new Date()} busy={busy} onCommand={(c) => void run(c)} />
+          <RecentChanges changes={changes} now={new Date()} />
+        </>
       )}
     </main>
   );

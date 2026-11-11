@@ -1,3 +1,4 @@
+import type { NormalizedEntity, PortalDataSource } from '@campuswatch/contracts';
 import type {
   AdapterCapabilities,
   CollectResult,
@@ -18,6 +19,8 @@ export class FakeAdapter implements PortalAdapter {
   probeState: SessionProbeResult['state'] = 'authenticated';
   probeError?: Error;
   probes = 0;
+  entities: Partial<Record<PortalDataSource, NormalizedEntity[]>> = {};
+  failures: Partial<Record<PortalDataSource, Error>> = {};
 
   capabilities(): AdapterCapabilities {
     return { ...citdCapabilities, implementationStatus: 'implemented' };
@@ -30,20 +33,25 @@ export class FakeAdapter implements PortalAdapter {
       : Promise.resolve({ state: this.probeState });
   }
 
-  private empty(source: CollectResult['source']): Promise<CollectResult> {
-    return Promise.resolve({ source, entities: [] });
+  private collect(source: PortalDataSource): Promise<CollectResult> {
+    const failure = this.failures[source];
+    return failure
+      ? Promise.reject(failure)
+      : Promise.resolve({ source, entities: this.entities[source] ?? [] });
   }
 
-  collectGrades = () => this.empty('grades');
-  collectTuition = () => this.empty('tuition');
-  collectTimetable = () => this.empty('timetable');
-  collectExams = () => this.empty('exams');
-  collectDashboardNotices = () => this.empty('dashboardNotices');
+  collectGrades = () => this.collect('grades');
+  collectTuition = () => this.collect('tuition');
+  collectTimetable = () => this.collect('timetable');
+  collectExams = () => this.collect('exams');
+  collectDashboardNotices = () => this.collect('dashboardNotices');
 
   classifyError(error: unknown) {
-    return error instanceof Error && error.message === 'drift'
-      ? ('ADAPTER_NEEDS_UPDATE' as const)
-      : ('PORTAL_UNAVAILABLE' as const);
+    const message = error instanceof Error ? error.message : '';
+    if (message === 'drift') {
+      return 'ADAPTER_NEEDS_UPDATE' as const;
+    }
+    return message === 'login' ? ('LOGIN_REQUIRED' as const) : ('PORTAL_UNAVAILABLE' as const);
   }
 }
 

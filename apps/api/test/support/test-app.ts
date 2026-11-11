@@ -1,12 +1,15 @@
 import type { AuthTokensResponse } from '@campuswatch/contracts';
-import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module.js';
 import { loadApiConfig } from '../../src/config.js';
+import { createHttpAdapter } from '../../src/http.js';
 import { createTestDatabase, type TestDatabase } from './test-database.js';
 
 export interface TestApp {
   readonly app: NestFastifyApplication;
+  /** URL of this test file's throwaway database, for direct assertions. */
+  readonly databaseUrl: string;
   close(): Promise<void>;
 }
 
@@ -22,13 +25,14 @@ export async function createTestApp(): Promise<TestApp> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register(config)],
   }).compile();
-  const app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter(), {
+  const app = moduleRef.createNestApplication<NestFastifyApplication>(createHttpAdapter(), {
     logger: false,
   });
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
   return {
     app,
+    databaseUrl: database.url,
     close: async () => {
       await app.close();
       await database.drop();

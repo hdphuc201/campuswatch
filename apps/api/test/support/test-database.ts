@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import pg from 'pg';
-import { runMigrations } from '../../src/database/migrate.js';
+import { runMigrations } from '@campuswatch/db';
 
 /** Admin connection used to create and drop throwaway databases (local default: infra compose). */
 const ADMIN_URL =

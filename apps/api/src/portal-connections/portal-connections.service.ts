@@ -7,8 +7,7 @@ import type {
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, eq, isNull, ne } from 'drizzle-orm';
 import { DATABASE, type Database } from '../database/database.module.js';
-import { isUniqueViolation } from '../database/errors.js';
-import { consentAudits, portalConnections } from '../database/schema.js';
+import { consentAudits, isUniqueViolation, portalConnections } from '@campuswatch/db';
 
 type ConnectionRow = typeof portalConnections.$inferSelect;
 

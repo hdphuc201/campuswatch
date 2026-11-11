@@ -1,4 +1,9 @@
-import type { ConnectionHealthState, PortalConnection } from '@campuswatch/contracts';
+import type {
+  ChangeEvent,
+  ConnectionHealthState,
+  PortalConnection,
+  SnapshotRequest,
+} from '@campuswatch/contracts';
 
 interface FakeConnection extends PortalConnection {
   userEmail: string;
@@ -16,6 +21,8 @@ export function createFakeApi() {
   const devices = new Map<string, { id: string; email: string; revoked: boolean }>();
   const connections = new Map<string, FakeConnection>();
   const calls: string[] = [];
+  const snapshots: SnapshotRequest[] = [];
+  const changes: ChangeEvent[] = [];
   let counter = 0;
   let offline = false;
   let failNext: number | undefined;
@@ -107,8 +114,42 @@ export function createFakeApi() {
       return json(200, strip(connection));
     }
 
+    if (method === 'POST' && path === '/sync-runs') {
+      if (!device) {
+        return json(401);
+      }
+      const snapshot = body as unknown as SnapshotRequest;
+      const connection = connections.get(snapshot.connectionId);
+      if (!connection || connection.userEmail !== device.email) {
+        return json(404);
+      }
+      if (connection.status === 'PAUSED') {
+        return json(409, { code: 'connection_paused' });
+      }
+      snapshots.push(snapshot);
+      const failed = snapshot.sources.filter((source) => source.status === 'error');
+      connection.status = failed.some((source) => source.errorCode === 'LOGIN_REQUIRED')
+        ? 'LOGIN_REQUIRED'
+        : failed.some((source) => source.errorCode === 'ADAPTER_NEEDS_UPDATE')
+          ? 'ADAPTER_NEEDS_UPDATE'
+          : 'CONNECTED';
+      connection.lastSyncAt = new Date().toISOString();
+      return json(200, {
+        syncRunId: snapshot.syncRunId,
+        status: failed.length === 0 ? 'completed' : 'partial',
+        entityCount: 0,
+        changeCount: 0,
+        replayed: false,
+        sources: [],
+        connection: strip(connection),
+      });
+    }
+
     if (!userEmail) {
       return json(401);
+    }
+    if (method === 'GET' && path === '/changes') {
+      return json(200, { changes, nextCursor: null });
     }
     if (method === 'POST' && path === '/devices/register') {
       const deviceId = id();
@@ -185,6 +226,8 @@ export function createFakeApi() {
   return {
     fetch,
     calls,
+    snapshots,
+    changes,
     connections,
     devices,
     /** Expires every access token, as if 15 minutes passed. */

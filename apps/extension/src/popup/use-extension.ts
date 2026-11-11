@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
+import type { ChangeEvent } from '@campuswatch/contracts';
 import type { Command, CommandResult, ExtensionView, UserErrorCode } from '../messaging.js';
 
 function send(command: Command): Promise<CommandResult> {
@@ -11,6 +12,7 @@ export function useExtension() {
   const [view, setView] = useState<ExtensionView>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<UserErrorCode>();
+  const [changes, setChanges] = useState<ChangeEvent[]>();
 
   const run = useCallback(async (command: Command) => {
     setBusy(true);
@@ -35,10 +37,16 @@ export function useExtension() {
         (result) => setView(result.view),
         () => setError('unexpected'),
       );
+    const loadChanges = () =>
+      void send({ type: 'getChanges' }).then(
+        (result) => setChanges(result.ok ? result.changes : undefined),
+        () => setChanges(undefined),
+      );
     refresh();
+    loadChanges();
     browser.storage.onChanged.addListener(refresh);
     return () => browser.storage.onChanged.removeListener(refresh);
   }, []);
 
-  return { view, busy, error, run };
+  return { view, busy, error, changes, run };
 }

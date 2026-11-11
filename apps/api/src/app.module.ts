@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { DevicesModule } from './devices/devices.module.js';
 import { HealthController } from './health/health.controller.js';
 import { PortalConnectionsModule } from './portal-connections/portal-connections.module.js';
+import { SyncModule } from './sync/sync.module.js';
 
 @Module({})
 export class AppModule {
@@ -18,6 +19,7 @@ export class AppModule {
         AuthModule,
         DevicesModule,
         PortalConnectionsModule,
+        SyncModule,
       ],
       controllers: [HealthController],
     };

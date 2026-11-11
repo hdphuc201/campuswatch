@@ -1,14 +1,15 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
+import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module.js';
 import { enabledLogLevels, loadApiConfig } from './config.js';
+import { createHttpAdapter } from './http.js';
 
 async function bootstrap(): Promise<void> {
   const config = loadApiConfig();
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.register(config),
-    new FastifyAdapter(),
+    createHttpAdapter(),
     { logger: enabledLogLevels(config.logLevel) },
   );
   app.enableShutdownHooks();

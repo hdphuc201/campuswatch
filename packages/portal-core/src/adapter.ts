@@ -1,15 +1,10 @@
-import type { ConnectionHealthState, NormalizedEntity } from '@campuswatch/contracts';
+import type {
+  ConnectionHealthState,
+  NormalizedEntity,
+  PortalDataSource,
+} from '@campuswatch/contracts';
 
-/** Portal data sources an adapter may read, in planned implementation order. */
-export const PORTAL_DATA_SOURCES = [
-  'grades',
-  'tuition',
-  'timetable',
-  'exams',
-  'dashboardNotices',
-] as const;
-
-export type PortalDataSource = (typeof PORTAL_DATA_SOURCES)[number];
+export { PORTAL_DATA_SOURCES, type PortalDataSource } from '@campuswatch/contracts';
 
 export type SourceSupport = 'supported' | 'planned' | 'unsupported';
 

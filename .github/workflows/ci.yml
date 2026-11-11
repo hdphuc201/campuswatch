@@ -53,9 +53,9 @@ jobs:
       - name: Check database migrations match the schema
         run: |
           pnpm db:generate
-          if [ -n "$(git status --porcelain -- apps/api/drizzle)" ]; then
-            echo "::error::apps/api/src/database/schema.ts changed without a migration. Run pnpm db:generate and commit the result."
-            git status --porcelain -- apps/api/drizzle
+          if [ -n "$(git status --porcelain -- packages/db/drizzle)" ]; then
+            echo "::error::packages/db/src/schema.ts changed without a migration. Run pnpm db:generate and commit the result."
+            git status --porcelain -- packages/db/drizzle
             exit 1
           fi
 

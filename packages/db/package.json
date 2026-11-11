@@ -1,0 +1,37 @@
+{
+  "name": "@campuswatch/db",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CampusWatch PostgreSQL schema (Drizzle), SQL migrations, and migration runner. Shared by the API and the worker.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "drizzle"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=../../.env dist/cli.js"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.4",
+    "pg": "8.23.1"
+  },
+  "devDependencies": {
+    "@campuswatch/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "8.23.1",
+    "drizzle-kit": "0.31.11",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

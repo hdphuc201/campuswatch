@@ -1,18 +1,25 @@
-import type { ProbeReportRequest } from '@campuswatch/contracts';
+import type { ProbeReportRequest, SnapshotRequest } from '@campuswatch/contracts';
 import { ApiError, NetworkError } from '../api/client.js';
 import type { KeyValueStore } from '../storage/key-value-store.js';
 import { STATE_KEYS } from '../storage/extension-state.js';
 
 /** Requests that failed transiently and are retried on later sync runs. */
-export type OutboxPayload = {
-  readonly kind: 'probe';
-  readonly connectionId: string;
-  readonly report: ProbeReportRequest;
-};
+export type OutboxPayload =
+  | {
+      readonly kind: 'probe';
+      readonly connectionId: string;
+      readonly report: ProbeReportRequest;
+    }
+  | {
+      readonly kind: 'snapshot';
+      readonly connectionId: string;
+      /** Normalized entities only (validated contract); never page HTML. */
+      readonly snapshot: SnapshotRequest;
+    };
 
 export interface OutboxItem {
   readonly id: string;
-  /** Items with the same key replace each other: only the latest probe matters. */
+  /** Items with the same key replace each other: only the latest probe/snapshot matters. */
   readonly dedupeKey: string;
   readonly payload: OutboxPayload;
   readonly attempts: number;

@@ -28,6 +28,7 @@ class UserFacingError extends Error {
 }
 
 const PORTAL_LOGIN_RECHECK_MS = 2 * 60 * 1000;
+const RECENT_CHANGES = 10;
 
 function toStoredConnection(connection: PortalConnection): StoredConnection {
   return {
@@ -46,6 +47,12 @@ export class ExtensionController {
 
   async handle(command: Command): Promise<CommandResult> {
     try {
+      if (command.type === 'getChanges') {
+        const changes = (await this.deps.state.getSession())
+          ? await this.deps.api.listChanges(RECENT_CHANGES)
+          : [];
+        return { ok: true, view: await this.view(), changes };
+      }
       const outcome = await this.dispatch(command);
       return { ok: true, view: await this.view(), ...(outcome ? { outcome } : {}) };
     } catch (error) {
@@ -154,6 +161,8 @@ export class ExtensionController {
       }
       case 'syncNow':
         return engine.run('manual');
+      case 'getChanges':
+        return undefined;
     }
   }
 

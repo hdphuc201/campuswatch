@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from 'react';
-import { PASSWORD_MIN_LENGTH } from '@campuswatch/contracts';
+import { type ChangeEvent, PASSWORD_MIN_LENGTH } from '@campuswatch/contracts';
 import type { Command, ExtensionView } from '../messaging.js';
+import { describeChange } from './changes.js';
 import { describeStatus, formatRelative } from './status.js';
 
 export function AuthForm(props: {
@@ -156,6 +157,37 @@ export function Dashboard(props: {
           Sign out
         </button>
       </div>
+    </section>
+  );
+}
+
+export function RecentChanges(props: { changes: ChangeEvent[] | undefined; now: Date }) {
+  if (!props.changes) {
+    return null;
+  }
+  return (
+    <section className="stack">
+      <h2>Recent changes</h2>
+      {props.changes.length === 0 ? (
+        <p className="hint">No changes yet. The first sync records your current data.</p>
+      ) : (
+        <ul className="changes">
+          {props.changes.map((change) => {
+            const { title, details } = describeChange(change);
+            return (
+              <li key={change.id}>
+                <strong>{title}</strong>
+                {details.map((detail) => (
+                  <span key={detail}>{detail}</span>
+                ))}
+                <time dateTime={change.createdAt}>
+                  {formatRelative(change.createdAt, props.now)}
+                </time>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }

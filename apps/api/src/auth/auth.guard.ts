@@ -8,7 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import { DATABASE, type Database } from '../database/database.module.js';
-import { authSessions, devices } from '../database/schema.js';
+import { authSessions, devices } from '@campuswatch/db';
 import { AccessTokenService } from './access-token.service.js';
 import { hashOpaqueToken } from './opaque-token.js';
 import {

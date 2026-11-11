@@ -1,12 +1,17 @@
 import {
   type AuthTokensResponse,
   authTokensResponseSchema,
+  type ChangeEvent,
+  changeListResponseSchema,
   type PortalConnection,
   portalConnectionListResponseSchema,
   portalConnectionSchema,
   type ProbeReportRequest,
   type RegisterDeviceResponse,
   registerDeviceResponseSchema,
+  type SnapshotRequest,
+  type SyncRunResult,
+  syncRunResultSchema,
 } from '@campuswatch/contracts';
 import type { ExtensionState } from '../storage/extension-state.js';
 
@@ -133,6 +138,23 @@ export class CampusWatchApi {
       { kind: 'device' },
       report,
       parseConnection,
+    );
+  }
+
+  /** Uploads a snapshot (device token). Retrying the same `syncRunId` is safe. */
+  uploadSnapshot(snapshot: SnapshotRequest): Promise<SyncRunResult> {
+    return this.request('POST', '/sync-runs', { kind: 'device' }, snapshot, (body) =>
+      syncRunResultSchema.parse(body),
+    );
+  }
+
+  listChanges(limit: number): Promise<ChangeEvent[]> {
+    return this.request(
+      'GET',
+      `/changes?limit=${limit}`,
+      { kind: 'user' },
+      undefined,
+      (body) => changeListResponseSchema.parse(body).changes,
     );
   }
 

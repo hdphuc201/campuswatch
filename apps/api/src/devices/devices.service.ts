@@ -3,7 +3,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { generateOpaqueToken, hashOpaqueToken } from '../auth/opaque-token.js';
 import { DATABASE, type Database } from '../database/database.module.js';
-import { devices } from '../database/schema.js';
+import { devices } from '@campuswatch/db';
 
 type DeviceRow = typeof devices.$inferSelect;
 

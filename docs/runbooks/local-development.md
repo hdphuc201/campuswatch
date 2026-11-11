@@ -76,8 +76,8 @@ matching URLs at the same port (`REDIS_URL=redis://127.0.0.1:6390`; for Postgres
 
 ## Database migrations
 
-The schema lives in `apps/api/src/database/schema.ts`; SQL migrations generated from it are
-committed in `apps/api/drizzle/`.
+The schema lives in `packages/db/src/schema.ts`; SQL migrations generated from it are
+committed in `packages/db/drizzle/`.
 
 ```bash
 pnpm db:generate   # after editing schema.ts: writes a new SQL migration (no database needed)

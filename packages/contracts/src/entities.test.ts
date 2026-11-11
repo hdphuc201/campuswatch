@@ -39,4 +39,20 @@ describe('normalizedEntitySchema', () => {
       false,
     );
   });
+
+  it('rejects page markup in values but allows ordinary text with angle brackets', () => {
+    const withValue = (value: string) => ({ ...validEntity, payload: { note: value } });
+    expect(normalizedEntitySchema.safeParse(withValue('<td>8,5</td>')).success).toBe(false);
+    expect(normalizedEntitySchema.safeParse(withValue('<script>x</script>')).success).toBe(false);
+    expect(normalizedEntitySchema.safeParse(withValue('score < 5 means fail')).success).toBe(true);
+  });
+
+  it('limits value length and the number of fields', () => {
+    expect(
+      normalizedEntitySchema.safeParse({ ...validEntity, payload: { note: 'x'.repeat(4001) } })
+        .success,
+    ).toBe(false);
+    const wide = Object.fromEntries(Array.from({ length: 65 }, (_, i) => [`f${i}`, i]));
+    expect(normalizedEntitySchema.safeParse({ ...validEntity, payload: wide }).success).toBe(false);
+  });
 });
