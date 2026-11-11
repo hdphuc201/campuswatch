@@ -2,13 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { CollectorError } from './errors.js';
 import { foldText } from './text.js';
 import {
+  findDates,
+  parseCountList,
   parseDate,
+  parseDecimal,
   parseMoney,
   parseScore,
   parseSemesterCell,
   parseTermContext,
   parseTimeSlot,
   parseWeekday,
+  splitCourse,
 } from './values.js';
 
 const isDrift = (fn: () => unknown) => {
@@ -116,5 +120,36 @@ describe('dates, weekdays, times, and terms', () => {
     expect(parseTermContext('Điểm trung bình học kỳ hệ 10: 8,44')).toBeNull();
     expect(parseTermContext('Học kỳ 1 năm học 2025-2027')).toBeNull();
     expect(parseSemesterCell('Hè', 's')).toBe('summer');
+  });
+});
+
+describe('values used by the live Portal layout', () => {
+  it('parses GPA-style decimals within range', () => {
+    expect(parseDecimal('8.44', 'g', 10)).toBe(8.44);
+    expect(parseDecimal('8,44', 'g', 10)).toBe(8.44);
+    expect(parseDecimal('-', 'g', 10)).toBeNull();
+    expect(isDrift(() => parseDecimal('84.4', 'g', 10))).toBe(true);
+    expect(isDrift(() => parseDecimal('abc', 'g', 10))).toBe(true);
+  });
+
+  it('sums registration counts', () => {
+    expect(parseCountList('Học mới (12), Học cải thiện (3)', 'c')).toBe(15);
+    expect(parseCountList('Học mới (4)', 'c')).toBe(4);
+    expect(parseCountList('7', 'c')).toBe(7);
+    expect(isDrift(() => parseCountList('Học mới', 'c'))).toBe(true);
+  });
+
+  it('finds every date in a text', () => {
+    expect(findDates('05/01/2026 – 15/05/2026', 'd')).toEqual(['2026-01-05', '2026-05-15']);
+    expect(findDates('Chưa đóng', 'd')).toEqual([]);
+  });
+
+  it('splits "CODE Course name"', () => {
+    expect(splitCourse('cs102 Cấu trúc dữ liệu')).toEqual({
+      code: 'CS102',
+      name: 'Cấu trúc dữ liệu',
+    });
+    expect(splitCourse('EN101')).toEqual({ code: 'EN101', name: null });
+    expect(splitCourse('Giải tích 1')).toBeNull();
   });
 });

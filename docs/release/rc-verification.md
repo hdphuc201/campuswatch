@@ -57,15 +57,15 @@
 
 ## External gates (`BLOCKED_EXTERNAL`)
 
-| Gate                                       | Why it is external                                                                  | Safe behavior until closed                                                                           |
-| ------------------------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Live, read-only CITD Portal verification   | Needs a student's own Portal account; no discovery capture exists in the repository | `liveVerified: false`, beta label; mismatches surface as `ADAPTER_NEEDS_UPDATE`, never as false data |
-| Staging/production host, DNS, TLS, backups | Needs a hosting account and domain                                                  | Compose stack, images, and runbooks ready                                                            |
-| Telegram bot and webhook                   | Needs a BotFather token and a public HTTPS URL                                      | Telegram reported unavailable; no Telegram deliveries                                                |
-| Email provider                             | Needed for email verification and password recovery                                 | Accounts work without verification                                                                   |
-| Privacy policy completion and approval     | Needs the operator's details and CITD/university review                             | Draft in `docs/pilot/privacy-policy.md`                                                              |
-| Chrome Web Store publication               | Needs a developer account and review                                                | Pilot uses Load unpacked with a verified zip                                                         |
-| Inviting pilot students                    | Needs the organizers                                                                | Onboarding guide and checklist ready                                                                 |
+| Gate                                       | Why it is external                                                                                                                              | Safe behavior until closed                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Live, read-only CITD Portal verification   | Page structure checked read-only on 2026-11-11 with a student's own session and collectors updated; a full Sync now in the extension is pending | `liveVerified: false`, beta label; mismatches surface as `ADAPTER_NEEDS_UPDATE`, never as false data |
+| Staging/production host, DNS, TLS, backups | Needs a hosting account and domain                                                                                                              | Compose stack, images, and runbooks ready                                                            |
+| Telegram bot and webhook                   | Needs a BotFather token and a public HTTPS URL                                                                                                  | Telegram reported unavailable; no Telegram deliveries                                                |
+| Email provider                             | Needed for email verification and password recovery                                                                                             | Accounts work without verification                                                                   |
+| Privacy policy completion and approval     | Needs the operator's details and CITD/university review                                                                                         | Draft in `docs/pilot/privacy-policy.md`                                                              |
+| Chrome Web Store publication               | Needs a developer account and review                                                                                                            | Pilot uses Load unpacked with a verified zip                                                         |
+| Inviting pilot students                    | Needs the organizers                                                                                                                            | Onboarding guide and checklist ready                                                                 |
 
 ## Known limitations
 

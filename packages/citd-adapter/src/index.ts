@@ -1,6 +1,7 @@
 export * from './collector.js';
 export * from './draft.js';
 export * from './errors.js';
+export * from './fields.js';
 export * from './parsers/dashboard.js';
 export * from './parsers/grades.js';
 export * from './parsers/schedule.js';

@@ -15,6 +15,8 @@ export type TableRow<F extends string> = Readonly<Record<F, string | undefined>>
 
 export interface ReadTable<F extends string> {
   readonly rows: TableRow<F>[];
+  /** The cell elements behind `rows`, same order, for cells that hold several values. */
+  readonly cells: Readonly<Record<F, Element | undefined>>[];
   /** Text of rows that are not data rows (for example summary rows with merged cells). */
   readonly extraText: string;
 }
@@ -123,6 +125,7 @@ export function readTable<F extends string>(
   const lastRequired = Math.max(...spec.required.map((field) => columns.get(field)!));
 
   const rows: TableRow<F>[] = [];
+  const cellRecords: Record<F, Element | undefined>[] = [];
   const extra: string[] = [];
   for (const row of Array.from(table.rows)) {
     if (headerRows.has(row)) {
@@ -138,12 +141,15 @@ export function readTable<F extends string>(
       continue;
     }
     const record = {} as Record<F, string | undefined>;
+    const cellRecord = {} as Record<F, Element | undefined>;
     for (const [field, index] of columns) {
       record[field] = texts[index];
+      cellRecord[field] = cells[index];
     }
     rows.push(record);
+    cellRecords.push(cellRecord);
   }
-  return { rows, extraText: extra.join(' ') };
+  return { rows, cells: cellRecords, extraText: extra.join(' ') };
 }
 
 /**

@@ -24,8 +24,8 @@ export function detectSession(doc: Document, url: string): 'authenticated' | 'lo
   }
   const loggedIn =
     LOGGED_IN_TEXT.test(foldText(doc.body?.textContent)) ||
-    Array.from(doc.querySelectorAll('a[href]')).some((link) =>
-      LOGGED_IN_HREF.test(link.getAttribute('href') ?? ''),
+    Array.from(doc.querySelectorAll('a[href], form[action]')).some((element) =>
+      LOGGED_IN_HREF.test(element.getAttribute('href') ?? element.getAttribute('action') ?? ''),
     );
   if (!loggedIn) {
     throw drift('dashboard: session marker not found');

@@ -1,9 +1,9 @@
-import type { CanonicalPayload } from '@campuswatch/contracts';
 import type { DraftEntity } from '../draft.js';
 import { drift } from '../errors.js';
+import { fieldValue, readLabeledSections } from '../fields.js';
 import { type ColumnSpec, findDataTables, readTable } from '../table.js';
-import { foldText } from '../text.js';
-import { optionalText, parseInteger, parseScore, requiredCode } from '../values.js';
+import { cellText } from '../text.js';
+import { optionalText, parseDecimal, parseInteger, parseScore, requiredCode } from '../values.js';
 
 type GradeField =
   | 'courseCode'
@@ -43,44 +43,52 @@ export const GRADE_COLUMNS: ColumnSpec<GradeField> = {
   },
 };
 
-const NUMBER = String.raw`(\d{1,2}(?:[.,]\d{1,3})?)`;
-const SUMMARY_PATTERNS = {
-  gpa10: new RegExp(String.raw`diem trung binh hoc ky(?: he 10)? ${NUMBER}`),
-  gpa4: new RegExp(String.raw`diem trung binh hoc ky he 4 ${NUMBER}`),
-  creditsEarned: /so tin chi dat hoc ky (\d{1,3})/,
-  cumulativeGpa10: new RegExp(String.raw`diem trung binh tich luy(?: he 10)? ${NUMBER}`),
-  cumulativeGpa4: new RegExp(String.raw`diem trung binh tich luy he 4 ${NUMBER}`),
-  cumulativeCredits: /so tin chi tich luy (\d{1,3})/,
+/** Labels of the "Tổng kết" (overall summary) block above the semester tables. */
+const SUMMARY_LABELS = {
+  creditsAttempted: ['so tin chi da hoc'],
+  creditsAccumulated: ['so tin chi tich luy'],
+  overallGpa10: ['diem trung binh chung'],
+  gpa10: ['diem trung binh tich luy'],
 } as const;
 
-/** Summary numbers are folded with the text, so "7,85" becomes "7 85" — rebuild it. */
-function summaryNumber(text: string, pattern: RegExp, max: number): number | null {
-  const loose = new RegExp(pattern.source.replace(NUMBER, String.raw`(\d{1,2})(?: (\d{1,3}))?`));
-  const match = loose.exec(text);
-  if (!match) {
+/** The overall summary as one `grade_summary` entity keyed "cumulative", or `null` if absent. */
+function parseSummary(doc: Document): DraftEntity | null {
+  const fields = readLabeledSections(doc).flatMap((section) => section.fields);
+  const text = (aliases: readonly string[]) => {
+    const value = fieldValue(fields, aliases);
+    return value ? cellText(value) : undefined;
+  };
+  const raw = Object.fromEntries(
+    Object.entries(SUMMARY_LABELS).map(([field, aliases]) => [field, text(aliases)]),
+  ) as Record<keyof typeof SUMMARY_LABELS, string | undefined>;
+  if (Object.values(raw).every((value) => value === undefined)) {
     return null;
   }
-  const value = Number(match[2] ? `${match[1]}.${match[2]}` : match[1]);
-  if (value > max) {
-    throw drift('grades.summary: value out of range');
-  }
-  return value;
+  return {
+    entityType: 'grade_summary',
+    externalKey: 'cumulative',
+    payload: {
+      gpa10: parseDecimal(raw.gpa10, 'grades.summary.gpa10', 10),
+      overallGpa10: parseDecimal(raw.overallGpa10, 'grades.summary.overallGpa10', 10),
+      creditsAccumulated: parseInteger(raw.creditsAccumulated, 'grades.summary.creditsAccumulated'),
+      creditsAttempted: parseInteger(raw.creditsAttempted, 'grades.summary.creditsAttempted'),
+    },
+  };
 }
 
 /**
- * Grades page: one table per semester under a "Học kỳ X năm học YYYY-YYYY" heading, followed
- * by semester and cumulative GPA lines.
+ * Grades page: a "Tổng kết" block of label/value pairs (credits, GPA), then one table per
+ * semester under an "HK: 1 - Năm: 2026 - 2027" heading, newest semester first.
  */
 export function parseGrades(doc: Document): DraftEntity[] {
   const drafts: DraftEntity[] = [];
-  let cumulative: CanonicalPayload | null = null;
 
-  for (const { table, context, trailingText } of findDataTables(doc, GRADE_COLUMNS, 'grades')) {
+  for (const { table, context } of findDataTables(doc, GRADE_COLUMNS, 'grades')) {
     if (!context) {
       throw drift('grades: semester heading not found');
     }
     const { academicYear, semester } = context;
-    const { rows, extraText } = readTable(table, GRADE_COLUMNS, 'grades');
+    const { rows } = readTable(table, GRADE_COLUMNS, 'grades');
 
     for (const row of rows) {
       const courseCode = requiredCode(row.courseCode, 'grades.courseCode');
@@ -105,33 +113,11 @@ export function parseGrades(doc: Document): DraftEntity[] {
         },
       });
     }
-
-    const summaryText = foldText(`${extraText} ${trailingText}`);
-    const gpa10 = summaryNumber(summaryText, SUMMARY_PATTERNS.gpa10, 10);
-    const gpa4 = summaryNumber(summaryText, SUMMARY_PATTERNS.gpa4, 4);
-    const creditsEarned = summaryNumber(summaryText, SUMMARY_PATTERNS.creditsEarned, 999);
-    if (gpa10 !== null || gpa4 !== null || creditsEarned !== null) {
-      drafts.push({
-        entityType: 'grade_summary',
-        externalKey: `${academicYear}|${semester}`,
-        payload: { academicYear, semester, gpa10, gpa4, creditsEarned },
-      });
-    }
-    const cumulativeGpa10 = summaryNumber(summaryText, SUMMARY_PATTERNS.cumulativeGpa10, 10);
-    const cumulativeGpa4 = summaryNumber(summaryText, SUMMARY_PATTERNS.cumulativeGpa4, 4);
-    const cumulativeCredits = summaryNumber(summaryText, SUMMARY_PATTERNS.cumulativeCredits, 999);
-    if (cumulativeGpa10 !== null || cumulativeGpa4 !== null || cumulativeCredits !== null) {
-      // Pages list semesters oldest first; the last block holds the current cumulative values.
-      cumulative = {
-        gpa10: cumulativeGpa10,
-        gpa4: cumulativeGpa4,
-        creditsAccumulated: cumulativeCredits,
-      };
-    }
   }
 
-  if (cumulative) {
-    drafts.push({ entityType: 'grade_summary', externalKey: 'cumulative', payload: cumulative });
+  const summary = parseSummary(doc);
+  if (summary) {
+    drafts.push(summary);
   }
   return drafts;
 }

@@ -35,21 +35,23 @@ function environment(pages: Record<string, Page>) {
 
 describe('runCollector', () => {
   it('probes the session from the dashboard', async () => {
-    const loggedIn = environment({ '/': { body: fixtureHtml('dashboard.html') } });
+    const loggedIn = environment({
+      [CITD_PAGE_PATHS.dashboard]: { body: fixtureHtml('dashboard.html') },
+    });
     expect(await runCollector({ action: 'probe' }, loggedIn.env)).toEqual({
       ok: true,
       probe: 'authenticated',
     });
 
     const redirected = environment({
-      '/': { body: fixtureHtml('login.html'), redirectTo: '/Account/Login?ReturnUrl=%2F' },
+      [CITD_PAGE_PATHS.dashboard]: { body: fixtureHtml('login.html'), redirectTo: '/login' },
     });
     expect(await runCollector({ action: 'probe' }, redirected.env)).toEqual({
       ok: true,
       probe: 'login_required',
     });
 
-    const down = environment({ '/': { status: 503 } });
+    const down = environment({ [CITD_PAGE_PATHS.dashboard]: { status: 503 } });
     expect(await runCollector({ action: 'probe' }, down.env)).toEqual({
       ok: true,
       probe: 'unavailable',
@@ -65,8 +67,8 @@ describe('runCollector', () => {
 
     expect(response.ok).toBe(true);
     const entities = 'entities' in response ? response.entities : [];
-    // 4 courses + semester-1 summary + cumulative summary.
-    expect(entities.length).toBe(6);
+    // 4 courses + the cumulative summary.
+    expect(entities.length).toBe(5);
     for (const entity of entities) {
       expect(normalizedEntitySchema.parse(entity)).toEqual(entity);
     }
@@ -91,13 +93,13 @@ describe('runCollector', () => {
       const response = await runCollector({ action: 'collect', source }, env);
       counts[source] = 'entities' in response ? response.entities.length : -1;
     }
-    expect(counts).toEqual({ tuition: 5, timetable: 3, exams: 2, dashboardNotices: 1 });
+    expect(counts).toEqual({ tuition: 2, timetable: 3, exams: 2, dashboardNotices: 1 });
   });
 
   it('classifies an expired session, an outage, a network failure, and drift', async () => {
     const path = CITD_PAGE_PATHS.grades;
     const cases: [Page, string][] = [
-      [{ body: fixtureHtml('login.html'), redirectTo: '/Account/Login' }, 'LOGIN_REQUIRED'],
+      [{ body: fixtureHtml('login.html'), redirectTo: '/login' }, 'LOGIN_REQUIRED'],
       [{ status: 403 }, 'LOGIN_REQUIRED'],
       [{ status: 502 }, 'PORTAL_UNAVAILABLE'],
       [{ error: new TypeError('Failed to fetch') }, 'NETWORK_ERROR'],

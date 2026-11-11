@@ -69,7 +69,7 @@ function createPortal() {
           const body = loggedIn ? pages.get(url.pathname) : fixture('login.html');
           const response = new Response(body ?? 'not found', { status: body ? 200 : 404 });
           Object.defineProperty(response, 'url', {
-            value: loggedIn ? url.href : `${CITD_ORIGIN}/Account/Login`,
+            value: loggedIn ? url.href : `${CITD_ORIGIN}/login`,
           });
           return Promise.resolve(response);
         },
@@ -176,10 +176,9 @@ describe('pilot pipeline end to end', () => {
     );
     expect(Object.fromEntries(rows.map((row) => [row.type, row.n]))).toEqual({
       grade_course: 4,
-      grade_summary: 2,
+      grade_summary: 1,
       portal_notice: 1,
       timetable_class: 3,
-      tuition_course: 3,
       tuition_term: 2,
     });
     const changes = await controller.handle({ type: 'getChanges' });
@@ -216,19 +215,18 @@ describe('pilot pipeline end to end', () => {
       .map((change) => `${change.kind} ${change.entityType} ${change.externalKey}`)
       .sort();
     expect(summary).toEqual([
-      'ADDED exam 2025-2026|2|CS102|2026-05-20|Ca 1',
-      'ADDED exam 2025-2026|2|EN101|2026-05-22|Ca 3',
-      'ADDED grade_course 2025-2026|2|EN101|EN101.01',
+      'ADDED exam 2025-2026|2|CS102|2026-05-20|1',
+      'ADDED exam 2025-2026|2|EN101|2026-05-22|3',
+      'ADDED grade_course 2025-2026|2|EN101|',
       'UPDATED grade_course 2025-2026|1|CS101|',
-      'UPDATED grade_summary 2025-2026|1',
       'UPDATED grade_summary cumulative',
     ]);
 
     // Chrome: one summary notification for the batch, without scores.
     expect(shown).toEqual([
       {
-        title: 'CampusWatch: 6 updates',
-        body: '4 grade updates, 2 exam schedule changes. Open CampusWatch to see the details.',
+        title: 'CampusWatch: 5 updates',
+        body: '3 grade updates, 2 exam schedule changes. Open CampusWatch to see the details.',
       },
     ]);
 
@@ -239,11 +237,11 @@ describe('pilot pipeline end to end', () => {
       telegram,
       createChatIdCipher(TEST_TELEGRAM.ENCRYPTION_KEY),
     );
-    expect((await dispatcher.dispatchDue()).sent).toBe(6);
+    expect((await dispatcher.dispatchDue()).sent).toBe(5);
     expect(telegram.sent).toEqual([
       {
         chatId: '5550001',
-        text: 'CampusWatch: 6 updates\n\n4 grade updates, 2 exam schedule changes. Open CampusWatch to see the details.',
+        text: 'CampusWatch: 5 updates\n\n3 grade updates, 2 exam schedule changes. Open CampusWatch to see the details.',
       },
     ]);
 
@@ -251,7 +249,7 @@ describe('pilot pipeline end to end', () => {
     clock = new Date(clock.getTime() + 31 * 60_000);
     await engine.run('alarm');
     const again = await controller.handle({ type: 'getChanges' });
-    expect(again.ok && again.changes).toHaveLength(6);
+    expect(again.ok && again.changes).toHaveLength(5);
     expect(shown).toHaveLength(1);
   });
 

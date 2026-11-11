@@ -1,78 +1,158 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
+<!-- Course fee details load through a POST request with a CSRF token; the collector never calls it. -->
 <html lang="vi">
-  <body>
-    <a href="/Account/Logout">Đăng xuất</a>
-    <h2>Học phí</h2>
-    <table>
-      <tr>
-        <th>Năm học</th>
-        <th>Học kỳ</th>
-        <th>Học phí</th>
-        <th>Nợ trước</th>
-        <th>Phải đóng</th>
-        <th>Đã đóng</th>
-        <th>Còn nợ</th>
-        <th>Hạn nộp</th>
-        <th>Trạng thái</th>
-      </tr>
-      <tr>
-        <td>2025-2026</td>
-        <td>HK1</td>
-        <td>9.800.000</td>
-        <td>0</td>
-        <td>9.800.000 đ</td>
-        <td>9.800.000</td>
-        <td>0</td>
-        <td>15/09/2025</td>
-        <td>Đã hoàn thành</td>
-      </tr>
-      <tr>
-        <td>2025 - 2026</td>
-        <td>Học kỳ 2</td>
-        <td>10.500.000</td>
-        <td>-</td>
-        <td>10.500.000</td>
-        <td>5.000.000</td>
-        <td>5.500.000</td>
-        <td>15/02/2026</td>
-        <td>Còn nợ</td>
-      </tr>
-    </table>
-    <h3>Chi tiết học phí Học kỳ 2 năm học 2025-2026</h3>
-    <table>
-      <tr>
-        <th>STT</th>
-        <th>Mã lớp học phần</th>
-        <th>Tên môn học</th>
-        <th>Số TC</th>
-        <th>Loại học phí</th>
-        <th>Số tiền</th>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>CS102.02</td>
-        <td>Cấu trúc dữ liệu</td>
-        <td>3</td>
-        <td>Học phí chính quy</td>
-        <td>4.500.000</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>PE101.05</td>
-        <td>Giáo dục thể chất</td>
-        <td>1</td>
-        <td>Học phí chính quy</td>
-        <td>1.500.000</td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>EN101.01</td>
-        <td>Tiếng Anh 1</td>
-        <td>2</td>
-        <td>Học lại</td>
-        <td>4.500.000</td>
-      </tr>
-    </table>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Học phí</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-slate-900">Học phí</h1>
+<p class="text-slate-500 mt-1">Theo dõi học phí và công nợ theo từng học kỳ</p>
+</div>
+</div>
+<div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+<div class="bg-uit-primary p-6">
+<h2 class="text-xl font-bold text-white">Thông tin học phí học kỳ 2 - Năm học 2025 - 2026</h2>
+</div>
+<div class="p-6 space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">1. Số tín chỉ học phí đăng ký</span>
+<span class="font-bold text-slate-900">Học mới (13)</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">2. Số môn đăng ký</span>
+<span class="font-bold text-slate-900">Học mới (4)</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">3. Học phí</span>
+<span class="font-bold text-slate-900">10,500,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">4. Nợ học kỳ trước</span>
+<span class="font-bold text-slate-900">0</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">5. Số tiền phải đóng</span>
+<span class="font-bold text-slate-900">10,500,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">6. Số tiền đã đóng</span>
+<span class="font-bold text-slate-900">5,000,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">7. Còn nợ</span>
+<span class="font-bold text-slate-900">5,500,000</span>
+</div>
+<div class="flex justify-between items-center py-2"></div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">8. Thời hạn nộp học phí</span>
+<span class="font-bold text-slate-900">15/02/2026</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">9. Thời gian đóng</span>
+<span class="font-bold text-slate-900">Chưa đóng</span>
+</div>
+</div>
+<div class="pt-4">
+<button type="button" class="tuition-detail-btn inline-flex items-center">Xem chi tiết học phần đăng ký</button>
+</div>
+<div id="detail-0" class="tuition-detail-table mt-6 hidden">
+<div class="overflow-x-auto rounded-2xl border">
+<table class="w-full">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr><th>STT</th><th>Mã lớp học</th><th>Mã môn học</th><th>Tên môn học</th><th>Số tín chỉ</th><th>Loại học phí</th></tr>
+</thead>
+<tbody><tr><td colspan="6" class="text-center text-slate-400">Đang tải...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+<div class="bg-uit-primary p-6">
+<h2 class="text-xl font-bold text-white">Thông tin học phí học kỳ 1 - Năm học 2025 - 2026</h2>
+</div>
+<div class="p-6 space-y-4">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">1. Số tín chỉ học phí đăng ký</span>
+<span class="font-bold text-slate-900">Học mới (12), Học cải thiện (3)</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">2. Số môn đăng ký</span>
+<span class="font-bold text-slate-900">Học mới (4), Học cải thiện (1)</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">3. Học phí</span>
+<span class="font-bold text-slate-900">9,800,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">4. Nợ học kỳ trước</span>
+<span class="font-bold text-slate-900">0</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">5. Số tiền phải đóng</span>
+<span class="font-bold text-slate-900">9,800,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">6. Số tiền đã đóng</span>
+<span class="font-bold text-slate-900">9,800,000</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">7. Còn nợ</span>
+<span class="font-bold text-slate-900">0</span>
+</div>
+<div class="flex justify-between items-center py-2"></div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">8. Thời hạn nộp học phí</span>
+<span class="font-bold text-slate-900">15/09/2025</span>
+</div>
+<div class="flex justify-between items-center py-2">
+<span class="text-slate-600 font-medium">9. Thời gian đóng</span>
+<span class="font-bold text-slate-900">10/09/2025 <span class="text-green-600"><strong>(Đúng hạn)</strong></span></span>
+</div>
+</div>
+<div class="pt-4">
+<button type="button" class="tuition-detail-btn inline-flex items-center">Xem chi tiết học phần đăng ký</button>
+</div>
+<div id="detail-1" class="tuition-detail-table mt-6 hidden">
+<div class="overflow-x-auto rounded-2xl border">
+<table class="w-full">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr><th>STT</th><th>Mã lớp học</th><th>Mã môn học</th><th>Tên môn học</th><th>Số tín chỉ</th><th>Loại học phí</th></tr>
+</thead>
+<tbody><tr><td colspan="6" class="text-center text-slate-400">Đang tải...</td></tr></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>

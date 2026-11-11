@@ -1,29 +1,46 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
+<!-- No notice popup was present on the live Dashboard when checked; this popup markup is an assumption. -->
 <html lang="vi">
-  <head>
-    <meta charset="utf-8" />
-    <title>Cổng thông tin sinh viên</title>
-  </head>
-  <body>
-    <header>
-      <span class="user">Sinh viên Mẫu</span>
-      <a href="/Account/Logout">Đăng xuất</a>
-    </header>
-    <main>
-      <h1>Trang chủ</h1>
-      <p>Chào mừng bạn đến với cổng thông tin.</p>
-    </main>
-    <div class="modal fade" id="thongbao">
-      <div class="modal-dialog" role="dialog">
-        <div class="modal-content">
-          <h4 class="modal-title">Thông báo lịch nghỉ lễ</h4>
-          <div class="modal-body">
-            Sinh viên được nghỉ học từ ngày 01/01/2027 đến hết ngày 02/01/2027.
-          </div>
-          <button type="button">Đóng</button>
-        </div>
-      </div>
-    </div>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Student Dashboard</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div><h2 class="text-2xl font-bold">Chào buổi sáng, Sinh Viên Mẫu! 👋</h2><p class="text-slate-500">Chúc bạn một ngày học tập hiệu quả.</p></div>
+<div class="modal fade" id="thongbao">
+<div class="modal-dialog" role="dialog">
+<div class="modal-content">
+<h4 class="modal-title">Thông báo lịch nghỉ lễ</h4>
+<div class="modal-body">
+Sinh viên được nghỉ học từ ngày 01/01/2027 đến hết ngày 02/01/2027.
+</div>
+<button type="button">Đóng</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>

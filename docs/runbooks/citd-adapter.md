@@ -1,10 +1,26 @@
 # Runbook: CITD adapter verification and drift
 
-## Live read-only verification (before the pilot)
+## Live Portal structure (checked read-only on 2026-11-11)
 
-The collectors were built from synthetic fixtures (`packages/citd-adapter/fixtures`). Before
-the pilot, a student volunteer verifies them with **their own** Portal account. Never ask for
-or share a Portal password, and never automate the login.
+A student opened the Portal with **their own** logged-in session and the page structure was
+read with same-origin `GET` requests only. Values were masked while reading; no page, cookie,
+or token was saved. The collectors and fixtures follow this structure:
+
+| Source    | Path                        | Structure                                                                                                                                                               |
+| --------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard | `/student`                  | Server-rendered page; logout is a `POST /logout` form (never touched). No notice popup was present, so the popup markup is still assumed                                |
+| Grades    | `/student/academic-results` | "Tổng kết" label/value block (credits attempted, credits accumulated, overall and cumulative average, 10-point scale); one table per "HK: 1 - Năm: 2026 - 2027" heading |
+| Tuition   | `/student/tuition`          | One block per "Thông tin học phí học kỳ 1 - Năm học 2026 - 2027" heading with numbered label/value rows. Course details load via `POST` + CSRF token: not collected     |
+| Timetable | `/student/timetable`        | `GET` filter form (`education_semester_id`, `education_year_id`); list table with "Lớp / Môn học" and "Lịch học / Thời gian" cells holding two lines each               |
+| Exams     | `/student/exams`            | Same filter form; table whose "Tên môn" cell holds the course code in its own element; "Chưa có lịch thi cho học kỳ này" when empty                                     |
+
+The remaining step is an end-to-end check in the extension: connect, press **Sync now**, and
+confirm the popup shows **Connected**. Then set `liveVerified: true` in
+`packages/portal-core/src/citd.ts` and update `docs/AUTOPILOT_STATUS.md`.
+
+## Re-checking a page after a Portal change
+
+Never ask for or share a Portal password, and never automate the login.
 
 1. Log in to the CITD Portal in Chrome as usual.
 2. For each page (Dashboard, grades, tuition, timetable, exams), note the URL path and compare
@@ -15,14 +31,13 @@ or share a Portal password, and never automate the login.
    (`8,5` stays a decimal with a comma; `9.800.000` keeps dot separators).
 5. Remove `<script>` tags, hidden form fields (`__VIEWSTATE`, `__RequestVerificationToken`,
    CSRF tokens), and anything that looks like a session identifier.
-6. Copy the redacted file into `packages/citd-adapter/fixtures/` with a
-   `<!-- REDACTED CAPTURE: … -->` comment, add a test in
+6. Rebuild the matching fixture in `packages/citd-adapter/fixtures/` with the new structure
+   and invented values (do not commit the saved page itself), add a test in
    `packages/citd-adapter/src/parsers/parsers.test.ts`, and fix aliases or paths until it
    passes. Run `pnpm --filter @campuswatch/citd-adapter test`.
 7. Load the extension unpacked, connect, and press **Sync now**. Confirm the popup shows
    **Connected** and not "CampusWatch needs an update".
-8. When all five sources pass, set `liveVerified: true` in
-   `packages/portal-core/src/citd.ts` and update `docs/AUTOPILOT_STATUS.md`.
+8. Delete the saved pages from outside the repository when done.
 
 Scan captures with gitleaks before committing them (for example
 `docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 dir /repo/packages/citd-adapter/fixtures`);

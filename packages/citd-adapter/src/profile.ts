@@ -1,22 +1,23 @@
 import type { PortalDataSource } from '@campuswatch/portal-core';
 
 /**
- * Everything CITD-specific about where data lives. Parsers locate tables by header text
- * (see the column specs in ./parsers), so only these paths and markers are layout-bound.
+ * Everything CITD-specific about where data lives. Parsers locate tables by header text and
+ * summary values by their labels (see ./parsers), so only these paths and markers are
+ * layout-bound.
  *
- * VERIFICATION STATUS: no Portal discovery capture is in this repository. These paths and the
- * fixtures in ../fixtures are a synthetic baseline. They must be checked read-only against the
- * live Portal by a student with their own account before the pilot (see docs/AUTOPILOT_STATUS.md).
+ * VERIFICATION STATUS: paths and page structure were checked read-only against the live Portal
+ * with a student's own logged-in session on 2026-11-11. The fixtures in ../fixtures mirror that
+ * structure with invented values. No Portal page, value, cookie, or token is stored here.
  */
 export const CITD_ORIGIN = 'https://portal.citd.edu.vn';
 
 export const CITD_PAGE_PATHS: Readonly<Record<'dashboard' | PortalDataSource, string>> = {
-  dashboard: '/',
-  grades: '/SinhVien/KetQuaHocTap',
-  tuition: '/SinhVien/HocPhi',
-  timetable: '/SinhVien/ThoiKhoaBieu',
-  exams: '/SinhVien/LichThi',
-  dashboardNotices: '/',
+  dashboard: '/student',
+  grades: '/student/academic-results',
+  tuition: '/student/tuition',
+  timetable: '/student/timetable',
+  exams: '/student/exams',
+  dashboardNotices: '/student',
 };
 
 /** A response URL matching this is the login page: the session has expired. */

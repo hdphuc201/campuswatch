@@ -1,121 +1,164 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
-<!-- grades.html after a regrade (CS101 final 8 -> 9, total 7,9 -> 8,4) and a new course (EN101). -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
+<!-- grades.html after a regrade (CS101 CK 8 -> 9, total 7.9 -> 8.4) and a new course (EN101). -->
 <html lang="vi">
-  <body>
-    <a href="/Account/Logout">Đăng xuất</a>
-    <h2>Kết quả học tập</h2>
-    <div class="semester">
-      <h3>Học kỳ 1 - Năm học 2025-2026</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Mã môn học</th>
-            <th>Tên môn học</th>
-            <th>Số TC</th>
-            <th>Điểm QT</th>
-            <th>Điểm GK</th>
-            <th>Điểm CK</th>
-            <th>Điểm TK (10)</th>
-            <th>Điểm TK (4)</th>
-            <th>Điểm chữ</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>2</td>
-            <td>MA101</td>
-            <td>Giải tích 1</td>
-            <td>4</td>
-            <td>9</td>
-            <td>8.5</td>
-            <td>9</td>
-            <td>8.9</td>
-            <td>3.7</td>
-            <td>A</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>CS101</td>
-            <td>Nhập môn lập trình</td>
-            <td>3</td>
-            <td>8,5</td>
-            <td>7</td>
-            <td>9</td>
-            <td>8,4</td>
-            <td>3,0</td>
-            <td>B</td>
-          </tr>
-          <tr>
-            <td colspan="10">
-              Điểm trung bình học kỳ hệ 10: 8,69 — Điểm trung bình học kỳ hệ 4: 3,40
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p>Số tín chỉ đạt học kỳ: 7</p>
-      <p>
-        Điểm trung bình tích lũy hệ 10: 8,69 | Điểm trung bình tích lũy hệ 4: 3,40 | Số tín chỉ tích
-        lũy: 7
-      </p>
-    </div>
-    <div class="semester">
-      <h3>Học kỳ 2 - Năm học 2025-2026</h3>
-      <table class="table">
-        <thead>
-          <tr>
-            <th rowspan="2">Mã MH</th>
-            <th rowspan="2">Tên học phần</th>
-            <th rowspan="2">Lớp học phần</th>
-            <th rowspan="2">Tín chỉ</th>
-            <th colspan="3">Điểm thành phần</th>
-            <th colspan="2">Điểm tổng kết</th>
-          </tr>
-          <tr>
-            <th>QT</th>
-            <th>GK</th>
-            <th>CK</th>
-            <th>Hệ 10</th>
-            <th>Hệ 4</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>CS102</td>
-            <td>Cấu trúc dữ liệu</td>
-            <td>CS102.02</td>
-            <td>3</td>
-            <td>9</td>
-            <td>-</td>
-            <td></td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>EN101</td>
-            <td>Tiếng Anh 1</td>
-            <td>EN101.01</td>
-            <td>2</td>
-            <td>8</td>
-            <td>7</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-          <tr>
-            <td>PE101</td>
-            <td>Giáo dục thể chất</td>
-            <td>PE101.05</td>
-            <td>1</td>
-            <td>M</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-            <td>-</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Kết quả học tập</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-slate-900">Kết quả học tập</h1>
+<p class="text-slate-500 mt-1">Xem điểm các môn học theo từng học kỳ</p>
+</div>
+</div>
+<div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
+<h2 class="text-lg font-bold text-slate-900 mb-4">Tổng kết</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase">Số tín chỉ đã học</p>
+<p class="text-xl font-bold text-slate-800">13</p>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase">Số tín chỉ tích luỹ</p>
+<p class="text-xl font-bold text-slate-800">7</p>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase">Điểm trung bình chung</p>
+<p class="text-xl font-bold text-slate-800">8.69</p>
+</div>
+<div>
+<p class="text-xs text-slate-400 font-bold uppercase">Điểm trung bình tích luỹ</p>
+<p class="text-xl font-bold text-slate-800">8.69</p>
+</div>
+</div>
+</div>
+<div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+<div class="bg-uit-primary p-6">
+<h2 class="text-xl font-bold text-white">HK: 2 - Năm: 2025 - 2026</h2>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-6 py-4 text-left">STT</th>
+<th class="px-6 py-4 text-left">Mã môn học</th>
+<th class="px-6 py-4 text-left">Tên môn học</th>
+<th class="px-6 py-4 text-left">Số tín chỉ</th>
+<th class="px-6 py-4 text-left">TH</th>
+<th class="px-6 py-4 text-left">QT</th>
+<th class="px-6 py-4 text-left">GK</th>
+<th class="px-6 py-4 text-left">CK</th>
+<th class="px-6 py-4 text-left">Điểm Học Phần</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200">
+<tr class="hover:bg-slate-50">
+<td class="px-6 py-4 whitespace-nowrap">1</td>
+<td class="px-6 py-4 whitespace-nowrap">CS102</td>
+<td class="px-6 py-4 whitespace-nowrap">Cấu trúc dữ liệu</td>
+<td class="px-6 py-4 whitespace-nowrap">3</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">9</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full">-</span></td>
+</tr>
+<tr class="hover:bg-slate-50">
+<td class="px-6 py-4 whitespace-nowrap">2</td>
+<td class="px-6 py-4 whitespace-nowrap">PE101</td>
+<td class="px-6 py-4 whitespace-nowrap">Giáo dục thể chất 1</td>
+<td class="px-6 py-4 whitespace-nowrap">1</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full">-</span></td>
+</tr>
+<tr class="hover:bg-slate-50">
+<td class="px-6 py-4 whitespace-nowrap">3</td>
+<td class="px-6 py-4 whitespace-nowrap">EN101</td>
+<td class="px-6 py-4 whitespace-nowrap">Tiếng Anh 1</td>
+<td class="px-6 py-4 whitespace-nowrap">2</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">8</td>
+<td class="px-6 py-4 whitespace-nowrap">7</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full">-</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+<div class="bg-uit-primary p-6">
+<h2 class="text-xl font-bold text-white">HK: 1 - Năm: 2025 - 2026</h2>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr>
+<th class="px-6 py-4 text-left">STT</th>
+<th class="px-6 py-4 text-left">Mã môn học</th>
+<th class="px-6 py-4 text-left">Tên môn học</th>
+<th class="px-6 py-4 text-left">Số tín chỉ</th>
+<th class="px-6 py-4 text-left">TH</th>
+<th class="px-6 py-4 text-left">QT</th>
+<th class="px-6 py-4 text-left">GK</th>
+<th class="px-6 py-4 text-left">CK</th>
+<th class="px-6 py-4 text-left">Điểm Học Phần</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200">
+<tr class="hover:bg-slate-50">
+<td class="px-6 py-4 whitespace-nowrap">1</td>
+<td class="px-6 py-4 whitespace-nowrap">CS101</td>
+<td class="px-6 py-4 whitespace-nowrap">Nhập môn lập trình</td>
+<td class="px-6 py-4 whitespace-nowrap">3</td>
+<td class="px-6 py-4 whitespace-nowrap">8.5</td>
+<td class="px-6 py-4 whitespace-nowrap">8.5</td>
+<td class="px-6 py-4 whitespace-nowrap">7</td>
+<td class="px-6 py-4 whitespace-nowrap">9</td>
+<td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full">8.4</span></td>
+</tr>
+<tr class="hover:bg-slate-50">
+<td class="px-6 py-4 whitespace-nowrap">2</td>
+<td class="px-6 py-4 whitespace-nowrap">MA101</td>
+<td class="px-6 py-4 whitespace-nowrap">Giải tích 1</td>
+<td class="px-6 py-4 whitespace-nowrap">4</td>
+<td class="px-6 py-4 whitespace-nowrap">-</td>
+<td class="px-6 py-4 whitespace-nowrap">9</td>
+<td class="px-6 py-4 whitespace-nowrap">8.5</td>
+<td class="px-6 py-4 whitespace-nowrap">9</td>
+<td class="px-6 py-4 whitespace-nowrap"><span class="px-3 py-1 rounded-full">8.9</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>

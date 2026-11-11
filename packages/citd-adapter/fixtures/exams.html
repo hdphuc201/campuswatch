@@ -1,37 +1,102 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
 <html lang="vi">
-  <body>
-    <a href="/Account/Logout">Đăng xuất</a>
-    <h3>Lịch thi Học kỳ 2 năm học 2025-2026</h3>
-    <table>
-      <tr>
-        <th>Mã môn học</th>
-        <th>Tên môn học</th>
-        <th>Ngày thi</th>
-        <th>Ca thi</th>
-        <th>Giờ thi</th>
-        <th>Phòng thi</th>
-        <th>Hình thức</th>
-      </tr>
-      <tr>
-        <td>CS102</td>
-        <td>Cấu trúc dữ liệu</td>
-        <td>20/05/2026</td>
-        <td>Ca 1</td>
-        <td>7h30</td>
-        <td>A2.101</td>
-        <td>Tự luận</td>
-      </tr>
-      <tr>
-        <td>EN101</td>
-        <td>Tiếng Anh 1</td>
-        <td>22/05/2026</td>
-        <td>Ca 3</td>
-        <td>13:00</td>
-        <td>-</td>
-        <td>Trắc nghiệm</td>
-      </tr>
-    </table>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Lịch thi</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-slate-900">Lịch thi</h1>
+<p class="text-slate-500 mt-1">Xem lịch thi theo học kỳ</p>
+</div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm p-4">
+<form method="get" class="flex flex-wrap items-end gap-4">
+<div class="w-full lg:w-40">
+<label class="block text-xs font-semibold" for="education_semester_id">Học kỳ</label>
+<select id="education_semester_id" name="education_semester_id" class="w-full rounded-xl border">
+<option value="1">1</option>
+<option value="2" selected>2</option>
+<option value="3">3</option>
+</select>
+</div>
+<div class="w-full lg:w-56">
+<label class="block text-xs font-semibold" for="education_year_id">Năm học</label>
+<select id="education_year_id" name="education_year_id" class="w-full rounded-xl border">
+<option value="3">2024 - 2025</option>
+<option value="4" selected>2025 - 2026</option>
+<option value="5">2026 - 2027</option>
+</select>
+</div>
+<button type="submit" class="inline-flex items-center">Áp dụng</button>
+
+</form>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div><p class="text-xs text-slate-400">Học kỳ</p><p class="text-lg font-bold">2</p></div>
+<div><p class="text-xs text-slate-400">Năm học</p><p class="text-lg font-bold">2025 - 2026</p></div>
+<div><p class="text-xs text-slate-400">Số môn thi</p><p class="text-lg font-bold">2</p></div>
+<div><p class="text-xs text-slate-400">Tổng tín chỉ</p><p class="text-lg font-bold">5</p></div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full">
+<thead class="bg-slate-50">
+<tr><th>STT</th><th>Mã lớp</th><th>Tên môn</th><th>Tín chỉ</th><th>Giảng viên</th><th>Ngày thi</th><th>Ca thi</th><th>Phòng thi</th><th>Loại học phí</th><th>Hình thức thi</th><th>Danh sách ký tên</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="px-4 py-3">1</td>
+<td class="px-4 py-3">CS102.B21</td>
+<td class="px-4 py-3"><span class="block font-semibold">CS102</span>Cấu trúc dữ liệu</td>
+<td class="px-4 py-3">3</td>
+<td class="px-4 py-3">Giảng viên A</td>
+<td class="px-4 py-3">20/05/2026</td>
+<td class="px-4 py-3">1</td>
+<td class="px-4 py-3">B1.01</td>
+<td class="px-4 py-3">Học mới</td>
+<td class="px-4 py-3">Tự luận</td>
+<td class="px-4 py-3"></td>
+</tr>
+<tr>
+<td class="px-4 py-3">2</td>
+<td class="px-4 py-3">EN101.B21</td>
+<td class="px-4 py-3"><span class="block font-semibold">EN101</span>Tiếng Anh 1</td>
+<td class="px-4 py-3">2</td>
+<td class="px-4 py-3">Giảng viên C</td>
+<td class="px-4 py-3">22/05/2026</td>
+<td class="px-4 py-3">3</td>
+<td class="px-4 py-3">C2.05</td>
+<td class="px-4 py-3">Học mới</td>
+<td class="px-4 py-3">Trắc nghiệm</td>
+<td class="px-4 py-3"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>

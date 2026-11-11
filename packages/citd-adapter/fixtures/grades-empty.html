@@ -1,9 +1,40 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
 <html lang="vi">
-  <body>
-    <a href="/Account/Logout">Đăng xuất</a>
-    <h2>Kết quả học tập</h2>
-    <p class="empty">Chưa có dữ liệu điểm.</p>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Kết quả học tập</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-slate-900">Kết quả học tập</h1>
+<p class="text-slate-500 mt-1">Xem điểm các môn học theo từng học kỳ</p>
+</div>
+</div>
+<div class="bg-white rounded-3xl p-6"><p class="text-slate-500">Chưa có dữ liệu điểm.</p></div>
+</div>
+</main>
+</div>
+</body>
 </html>

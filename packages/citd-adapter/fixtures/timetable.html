@@ -1,55 +1,127 @@
 <!doctype html>
-<!-- SYNTHETIC FIXTURE: invented data, not captured from the CITD Portal. -->
+<!-- SYNTHETIC FIXTURE: invented values. Structure mirrors the CITD Portal (checked read-only on 2026-11-11). -->
 <html lang="vi">
-  <body>
-    <a href="/Account/Logout">Đăng xuất</a>
-    <form method="get">
-      <select name="hocky">
-        <option value="20251">Học kỳ 1 - Năm học 2025-2026</option>
-        <option value="20252" selected>Học kỳ 2 - Năm học 2025-2026</option>
-      </select>
-    </form>
-    <table>
-      <tr>
-        <th>Mã lớp</th>
-        <th>Tên môn học</th>
-        <th>Thứ</th>
-        <th>Giờ học</th>
-        <th>Phòng</th>
-        <th>Giảng viên</th>
-        <th>Từ ngày</th>
-        <th>Đến ngày</th>
-      </tr>
-      <tr>
-        <td>CS102.02</td>
-        <td>Cấu trúc dữ liệu</td>
-        <td>Thứ 2</td>
-        <td>07:30 - 09:30</td>
-        <td>A1.203</td>
-        <td>Giảng viên A</td>
-        <td>05/01/2026</td>
-        <td>15/05/2026</td>
-      </tr>
-      <tr>
-        <td>CS102.02</td>
-        <td>Cấu trúc dữ liệu</td>
-        <td>Thứ 5</td>
-        <td>13h00 - 15h00</td>
-        <td>Lab B2</td>
-        <td>Giảng viên A</td>
-        <td>08/01/2026</td>
-        <td>15/05/2026</td>
-      </tr>
-      <tr>
-        <td>PE101.05</td>
-        <td>Giáo dục thể chất</td>
-        <td>Chủ nhật</td>
-        <td>Tiết 1 - 3</td>
-        <td>Sân C</td>
-        <td>-</td>
-        <td>11/01/2026</td>
-        <td>10/05/2026</td>
-      </tr>
-    </table>
-  </body>
+<head>
+<meta charset="utf-8">
+<title>Thời khóa biểu</title>
+</head>
+<body class="bg-slate-50">
+<div class="flex h-screen">
+<aside id="sidebar" class="w-64 bg-white">
+<nav>
+<a href="/student">Trang chủ</a>
+<a href="/student/academic-results">Kết quả học tập</a>
+<a href="/student/timetable">Thời khóa biểu</a>
+<a href="/student/exams">Lịch thi</a>
+<a href="/student/tuition">Học phí</a>
+</nav>
+</aside>
+<main class="flex-1 flex flex-col h-screen overflow-y-auto">
+<header class="h-20 bg-white/80 border-b">
+<div class="flex items-center gap-3">
+<div id="avatarButton" class="flex items-center gap-3">
+<div class="text-right"><p class="text-sm font-bold">Sinh Viên Mẫu</p><p class="text-xs text-slate-500">00000000</p></div>
+</div>
+<form method="POST" action="/logout"><button type="submit">Đăng xuất</button></form>
+</div>
+</header>
+<div class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto w-full">
+<div class="flex items-center justify-between">
+<div>
+<h1 class="text-3xl font-bold text-slate-900">Thời khóa biểu</h1>
+<p class="text-slate-500 mt-1">Xem lịch học theo học kỳ hoặc theo tuần</p>
+</div>
+</div>
+<div class="bg-white rounded-2xl shadow-sm p-4">
+<form method="get" class="flex flex-wrap items-end gap-4">
+<div class="w-full lg:w-40">
+<label class="block text-xs font-semibold" for="education_semester_id">Học kỳ</label>
+<select id="education_semester_id" name="education_semester_id" class="w-full rounded-xl border">
+<option value="1">1</option>
+<option value="2" selected>2</option>
+<option value="3">3</option>
+</select>
+</div>
+<div class="w-full lg:w-56">
+<label class="block text-xs font-semibold" for="education_year_id">Năm học</label>
+<select id="education_year_id" name="education_year_id" class="w-full rounded-xl border">
+<option value="3">2024 - 2025</option>
+<option value="4" selected>2025 - 2026</option>
+<option value="5">2026 - 2027</option>
+</select>
+</div>
+<button type="submit" class="inline-flex items-center">Áp dụng</button>
+<div class="lg:ml-auto"><p class="text-xs font-semibold text-slate-500">Tổng số tín chỉ</p><p class="text-2xl font-bold">5</p></div>
+</form>
+</div>
+<div class="bg-white rounded-2xl shadow-sm">
+<div class="flex border-b"><button type="button" class="timetable-tab">Danh sách</button><button type="button" class="timetable-tab">Lịch tuần</button></div>
+<div id="timetable-panel-list">
+<div class="overflow-x-auto">
+<table class="w-full min-w-[760px]">
+<thead class="bg-slate-50 border-b border-slate-200">
+<tr><th class="px-4 py-3 text-left">#</th><th class="px-4 py-3 text-left">Lớp / Môn học</th><th class="px-4 py-3 text-center">Số tín chỉ</th><th class="px-4 py-3 text-left">Loại học phí</th><th class="px-4 py-3 text-left">Lịch học / Thời gian</th><th class="px-4 py-3 text-left">Giảng viên</th></tr>
+</thead>
+<tbody>
+<tr class="hover:bg-slate-50">
+<td class="px-4 py-4 text-sm">1</td>
+<td class="px-4 py-4">
+<p class="text-sm font-semibold text-slate-900">CS102.B21</p>
+<p class="text-sm text-slate-500">CS102 Cấu trúc dữ liệu</p>
+</td>
+<td class="px-4 py-4 text-sm">3</td>
+<td class="px-4 py-4 text-sm">Học mới</td>
+<td class="px-4 py-4">
+<p class="text-sm text-slate-800">Thứ 2, 7h30 - 9h45</p>
+<p class="text-sm text-slate-500"><span class="font-bold text-red-600">05/01/2026</span> – 15/05/2026</p>
+</td>
+<td class="px-4 py-4 text-sm">Giảng viên A</td>
+</tr>
+<tr class="hover:bg-slate-50">
+<td class="px-4 py-4 text-sm">2</td>
+<td class="px-4 py-4">
+<p class="text-sm font-semibold text-slate-900">CS102.B21.1</p>
+<p class="text-sm text-slate-500">CS102 Cấu trúc dữ liệu</p>
+</td>
+<td class="px-4 py-4 text-sm">1</td>
+<td class="px-4 py-4 text-sm">Học mới</td>
+<td class="px-4 py-4">
+<p class="text-sm text-slate-800">Thứ 5, 13h00 - 15h15</p>
+<p class="text-sm text-slate-500"><span class="font-bold text-red-600">08/01/2026</span> – 15/05/2026</p>
+</td>
+<td class="px-4 py-4 text-sm">Giảng viên B</td>
+</tr>
+<tr class="hover:bg-slate-50">
+<td class="px-4 py-4 text-sm">3</td>
+<td class="px-4 py-4">
+<p class="text-sm font-semibold text-slate-900">PE101.B25</p>
+<p class="text-sm text-slate-500">PE101 Giáo dục thể chất 1</p>
+</td>
+<td class="px-4 py-4 text-sm">1</td>
+<td class="px-4 py-4 text-sm">Học mới</td>
+<td class="px-4 py-4">
+<p class="text-sm text-slate-800">Chủ nhật, 07h30 - 09h30</p>
+<p class="text-sm text-slate-500"><span class="font-bold text-red-600">11/01/2026</span> – 10/05/2026</p>
+</td>
+<td class="px-4 py-4 text-sm">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="timetable-panel-week" class="hidden p-4">
+<table class="w-full">
+<thead><tr><th></th><th>Thứ 2 11/05</th><th>Thứ 3 12/05</th><th>Thứ 4 13/05</th><th>Thứ 5 14/05</th><th>Thứ 6 15/05</th><th>Thứ 7 16/05</th><th>Chủ nhật 17/05</th></tr></thead>
+<tbody>
+<tr><td>Sáng 8:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Chiều 14:00</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>Tối 18:15</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body>
 </html>

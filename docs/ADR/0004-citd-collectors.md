@@ -57,10 +57,30 @@ Error details name pages and fields only. Unknown exceptions are reported as
 
 ### Verification status
 
-Paths, markers, and fixtures are a **synthetic baseline**. `citdCapabilities.liveVerified`
-is `false`, and the popup labels Portal reading as beta. Verifying against the live Portal
-requires a student's own account and is recorded as `BLOCKED_EXTERNAL` until done
-(see `docs/runbooks/citd-adapter.md`).
+The first version used a synthetic baseline and failed on the live Portal: every guessed path
+returned 404 (`ADAPTER_NEEDS_UPDATE`). On 2026-11-11 the page structure was checked read-only
+with a student's own logged-in session, and the collectors were updated (see the amendment
+below). `citdCapabilities.liveVerified` stays `false` until a full **Sync now** in the
+extension succeeds (see `docs/runbooks/citd-adapter.md`).
+
+### Amendment (2026-11-11): live Portal layout
+
+- Paths are under `/student` (`/student/academic-results`, `/student/tuition`,
+  `/student/timetable`, `/student/exams`).
+- Summary values are not in tables but in **label/value pairs** (a label element followed by
+  its value element). `readLabeledSections` reads them in document order, grouped under the
+  term headings before them, matching folded labels without their list numbers.
+- Grades: one `grade_summary` keyed `cumulative` from the "Tổng kết" block (`gpa10`,
+  `overallGpa10`, `creditsAccumulated`, `creditsAttempted`). The Portal shows no per-semester
+  GPA, so none is emitted.
+- Tuition: one `tuition_term` per term block, with `paidDate` and the Portal's timing note
+  (`statusText`); `status` comes from the balance. **`tuition_course` is not collected:** the
+  Portal loads course fees with a `POST` request that needs a CSRF token, and the collector
+  only makes read-only `GET` requests.
+- Timetable and exams show one semester at a time; the term comes from the selected options
+  of the page's `GET` filter form (falling back to "Học kỳ"/"Năm học" label/value pairs).
+  Combined cells are split by line (class code / "CODE Course name"; "Thứ 2, 18h15 - 21h00" /
+  date range). A class without a weekly slot is kept once with a null weekday.
 
 ## Consequences
 

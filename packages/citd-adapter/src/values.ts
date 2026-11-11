@@ -58,6 +58,45 @@ export function parseMoney(raw: string | undefined, field: string): number | nul
   return negative ? -value : value;
 }
 
+/** A decimal such as a GPA ("8.44", "8,44") in [0, max]; "-" → null. */
+export function parseDecimal(raw: string | undefined, field: string, max: number): number | null {
+  if (isEmptyCell(raw)) {
+    return null;
+  }
+  const text = cleanText(raw).replace(',', '.');
+  if (!/^\d{1,3}(\.\d{1,3})?$/.test(text)) {
+    throw drift(`${field}: not a number`);
+  }
+  const value = Number(text);
+  if (value > max) {
+    throw drift(`${field}: value out of range`);
+  }
+  return value;
+}
+
+/** Sum of the counts in "Học mới (12), Học cải thiện (3)" → 15; "-" → null. */
+export function parseCountList(raw: string | undefined, field: string): number | null {
+  if (isEmptyCell(raw)) {
+    return null;
+  }
+  const text = cleanText(raw);
+  const counts = Array.from(text.matchAll(/\((\d{1,3})\)/g), (match) => Number(match[1]));
+  if (counts.length === 0) {
+    if (/^\d{1,3}$/.test(text)) {
+      return Number(text);
+    }
+    throw drift(`${field}: not a count list`);
+  }
+  return counts.reduce((sum, count) => sum + count, 0);
+}
+
+/** All "dd/mm/yyyy" dates in a text, as ISO dates. */
+export function findDates(raw: string | undefined, field: string): string[] {
+  return Array.from(cleanText(raw).matchAll(/\b\d{1,2}\/\d{1,2}\/\d{4}\b/g), (match) =>
+    parseDate(match[0], field),
+  ).filter((date): date is string => date !== null);
+}
+
 export function parseInteger(raw: string | undefined, field: string): number | null {
   if (isEmptyCell(raw)) {
     return null;
@@ -181,6 +220,17 @@ export function parseAcademicYearCell(raw: string | undefined, field: string): s
 /** Optional free text (names, rooms): cleaned, `null` when empty. */
 export function optionalText(raw: string | undefined): string | null {
   return isEmptyCell(raw) ? null : cleanText(raw);
+}
+
+const COURSE_CODE = /^([A-Za-z]{2,6}\d{2,4}[A-Za-z0-9]{0,3})\b\s*[-–:]?\s*(.*)$/;
+
+/** "CS102 Cấu trúc dữ liệu" → code and name. `null` when the text does not start with a code. */
+export function splitCourse(raw: string | undefined): { code: string; name: string | null } | null {
+  const match = COURSE_CODE.exec(cleanText(raw));
+  if (!match) {
+    return null;
+  }
+  return { code: match[1]!.toUpperCase(), name: optionalText(match[2]) };
 }
 
 /** Required identifier (course or class code). */
