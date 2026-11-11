@@ -1,0 +1,7 @@
+{
+  "extends": ["@campuswatch/config/tsconfig/base.json", "./.wxt/tsconfig.json"],
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx"
+  }
+}

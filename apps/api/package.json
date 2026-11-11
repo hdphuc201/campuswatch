@@ -1,0 +1,35 @@
+{
+  "name": "@campuswatch/api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CampusWatch HTTP API (NestJS on Fastify).",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "nest start --watch --exec \"node --env-file-if-exists=../../.env\"",
+    "start": "node --env-file-if-exists=../../.env dist/main.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@campuswatch/contracts": "workspace:*",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
+    "@nestjs/platform-fastify": "12.4.2",
+    "reflect-metadata": "catalog:",
+    "rxjs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@campuswatch/config": "workspace:*",
+    "@nestjs/cli": "catalog:",
+    "@nestjs/testing": "catalog:",
+    "@swc/core": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@campuswatch/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CampusWatch background worker (NestJS + BullMQ).",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "nest start --watch --exec \"node --env-file-if-exists=../../.env\"",
+    "start": "node --env-file-if-exists=../../.env dist/main.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nestjs/bullmq": "12.0.1",
+    "@nestjs/common": "catalog:",
+    "@nestjs/core": "catalog:",
+    "bullmq": "6.7.3",
+    "ioredis": "6.0.0",
+    "reflect-metadata": "catalog:",
+    "rxjs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@campuswatch/config": "workspace:*",
+    "@nestjs/cli": "catalog:",
+    "@swc/core": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "unplugin-swc": "catalog:",
+    "vitest": "catalog:"
+  }
+}

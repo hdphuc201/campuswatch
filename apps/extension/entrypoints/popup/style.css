@@ -1,0 +1,50 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+}
+
+body {
+  margin: 0;
+  min-width: 300px;
+}
+
+.popup {
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.status {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #e7f6ec;
+  color: #14532d;
+  font-weight: 600;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+dt {
+  font-weight: 600;
+}
+
+dd {
+  margin: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .status {
+    background: #12351f;
+    color: #bbf7d0;
+  }
+}

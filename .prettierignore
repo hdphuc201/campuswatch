@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+dist/
+.output/
+.wxt/
+.turbo/
+coverage/
+.serena/
+.code-review-graph/
+# Source-of-truth plan document, kept exactly as authored.
+docs/CAMPUSWATCH_OFFICIAL_IMPLEMENTATION_PLAN.md

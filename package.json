@@ -1,0 +1,26 @@
+{
+  "name": "campuswatch",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22.13.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "prettier --check . && turbo run lint",
+    "format": "prettier --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "infra:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d --wait",
+    "infra:down": "docker compose --project-directory . -f infra/docker-compose.yml down"
+  },
+  "prettier": "@campuswatch/config/prettier",
+  "devDependencies": {
+    "@campuswatch/config": "workspace:*",
+    "prettier": "catalog:",
+    "turbo": "2.11.10"
+  }
+}

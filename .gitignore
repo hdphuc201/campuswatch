@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build output and caches
+dist/
+.output/
+.wxt/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets (only .env.example is committed)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crx
+
+# Local data, browser profiles, and logs
+*.log
+*.sqlite
+*.sqlite3
+*.db
+.chrome-profile/
+.chrome-data/
+infra/data/
+
+# Editor, OS, and local tooling state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.serena/
+.code-review-graph/
