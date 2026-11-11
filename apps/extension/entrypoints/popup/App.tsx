@@ -1,3 +1,4 @@
+import { browser } from 'wxt/browser';
 import { AuthForm, ConsentView, Dashboard, RecentChanges } from '../../src/popup/components.js';
 import { ERROR_MESSAGES } from '../../src/popup/status.js';
 import { useExtension } from '../../src/popup/use-extension.js';
@@ -25,7 +26,13 @@ export function App() {
         />
       ) : (
         <>
-          <Dashboard view={view} now={new Date()} busy={busy} onCommand={(c) => void run(c)} />
+          <Dashboard
+            view={view}
+            now={new Date()}
+            busy={busy}
+            onCommand={(c) => void run(c)}
+            onOpenSettings={() => void browser.runtime.openOptionsPage()}
+          />
           <RecentChanges changes={changes} now={new Date()} />
         </>
       )}

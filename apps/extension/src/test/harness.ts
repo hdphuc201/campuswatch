@@ -1,4 +1,8 @@
-import type { NormalizedEntity, PortalDataSource } from '@campuswatch/contracts';
+import type {
+  NormalizedEntity,
+  PortalDataSource,
+  RenderedNotification,
+} from '@campuswatch/contracts';
 import type {
   AdapterCapabilities,
   CollectResult,
@@ -87,6 +91,8 @@ export function createHarness(options: { adapter?: PortalAdapter | null; backend
   const outbox = new Outbox(store, () => clock.now().getTime());
   const scheduler = new RecordingScheduler();
   const adapter = options.adapter === undefined ? new FakeAdapter() : options.adapter;
+  const shown: RenderedNotification[] = [];
+  const opened: string[] = [];
   const engine = new SyncEngine({
     state,
     api,
@@ -95,6 +101,12 @@ export function createHarness(options: { adapter?: PortalAdapter | null; backend
     adapter,
     now: clock.now,
     random: () => 0.5,
+    notifier: {
+      show: (notification) => {
+        shown.push(notification);
+        return Promise.resolve();
+      },
+    },
   });
   const controller = new ExtensionController({
     state,
@@ -105,6 +117,23 @@ export function createHarness(options: { adapter?: PortalAdapter | null; backend
     adapterAvailable: adapter?.capabilities().implementationStatus === 'implemented',
     adapterBeta: false,
     now: clock.now,
+    openUrl: (url) => {
+      opened.push(url);
+      return Promise.resolve();
+    },
   });
-  return { backend, store, state, api, outbox, scheduler, adapter, engine, controller, clock };
+  return {
+    backend,
+    store,
+    state,
+    api,
+    outbox,
+    scheduler,
+    adapter,
+    engine,
+    controller,
+    clock,
+    shown,
+    opened,
+  };
 }

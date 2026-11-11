@@ -15,6 +15,13 @@
       "when": 1794391339355,
       "tag": "0001_sync_history",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794394156250,
+      "tag": "0002_notifications",
+      "breakpoints": true
     }
   ]
 }

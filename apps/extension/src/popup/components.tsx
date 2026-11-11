@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react';
 import { type ChangeEvent, PASSWORD_MIN_LENGTH } from '@campuswatch/contracts';
 import type { Command, ExtensionView } from '../messaging.js';
-import { describeChange } from './changes.js';
+import { describeChange } from '@campuswatch/notifications';
 import { describeStatus, formatRelative } from './status.js';
 
 export function AuthForm(props: {
@@ -100,6 +100,7 @@ export function Dashboard(props: {
   now: Date;
   busy: boolean;
   onCommand: (command: Command) => void;
+  onOpenSettings?: () => void;
 }) {
   const { view, now, busy, onCommand } = props;
   const status = describeStatus(view, now);
@@ -150,6 +151,11 @@ export function Dashboard(props: {
         </p>
       ) : null}
       <div className="row">
+        {props.onOpenSettings ? (
+          <button type="button" className="link" onClick={props.onOpenSettings}>
+            Notification settings
+          </button>
+        ) : null}
         <button type="button" className="link" onClick={() => onCommand({ type: 'disconnect' })}>
           Disconnect Portal
         </button>

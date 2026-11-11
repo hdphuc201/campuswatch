@@ -7,6 +7,7 @@ import type { KeyValueStore } from '../storage/key-value-store.js';
 import { SyncEngine } from '../sync/engine.js';
 import { Outbox } from '../sync/outbox.js';
 import type { SyncScheduler } from '../sync/schedule.js';
+import type { Notifier } from '../sync/engine.js';
 import { ExtensionController } from './controller.js';
 
 export const SYNC_ALARM = 'campuswatch-sync';
@@ -31,13 +32,33 @@ const alarmScheduler: SyncScheduler = {
   },
 };
 
+const chromeNotifier: Notifier = {
+  async show(notification) {
+    await browser.notifications.create(`campuswatch-${Date.now()}`, {
+      type: 'basic',
+      iconUrl: browser.runtime.getURL('/icon/128.png'),
+      title: notification.title,
+      message: notification.body,
+      priority: 1,
+    });
+  },
+};
+
 /** Wires the controller to real Chrome APIs. Called once per service-worker start. */
 export function createRuntime(adapter: PortalAdapter | null) {
   const state = new ExtensionState(chromeStore());
   const now = () => new Date();
   const api = new CampusWatchApi({ baseUrl: API_BASE_URL, fetch: fetch.bind(globalThis), state });
   const outbox = new Outbox(state.store, () => Date.now());
-  const engine = new SyncEngine({ state, api, outbox, scheduler: alarmScheduler, adapter, now });
+  const engine = new SyncEngine({
+    state,
+    api,
+    outbox,
+    scheduler: alarmScheduler,
+    adapter,
+    now,
+    notifier: chromeNotifier,
+  });
   const controller = new ExtensionController({
     state,
     api,
@@ -47,6 +68,9 @@ export function createRuntime(adapter: PortalAdapter | null) {
     adapterAvailable: adapter?.capabilities().implementationStatus === 'implemented',
     adapterBeta: adapter?.capabilities().liveVerified === false,
     now,
+    openUrl: async (url) => {
+      await browser.tabs.create({ url });
+    },
   });
   return { engine, controller };
 }

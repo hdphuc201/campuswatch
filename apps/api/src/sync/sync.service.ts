@@ -25,6 +25,7 @@ import { ConflictException, Inject, Injectable, NotFoundException } from '@nestj
 import { and, asc, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 import type { DevicePrincipal } from '../auth/principal.js';
 import { DATABASE, type Database } from '../database/database.module.js';
+import { NotificationsService } from '../notifications/notifications.service.js';
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 type ConnectionRow = typeof portalConnections.$inferSelect;
@@ -96,7 +97,10 @@ function decodeCursor(cursor: string): { createdAt: Date; id: string } | null {
 
 @Injectable()
 export class SyncService {
-  constructor(@Inject(DATABASE) private readonly db: Database) {}
+  constructor(
+    @Inject(DATABASE) private readonly db: Database,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   /**
    * Applies a snapshot from one of the owner's devices. Runs in one transaction with the
@@ -160,8 +164,8 @@ export class SyncService {
       }
 
       const results: SourceResultJson[] = [];
+      const newEvents: ChangeRow[] = [];
       let entityCount = 0;
-      let changeCount = 0;
       for (const snapshot of request.sources) {
         if (snapshot.status === 'error') {
           results.push({
@@ -181,7 +185,7 @@ export class SyncService {
           snapshot.entities,
         );
         entityCount += applied.entityCount;
-        changeCount += applied.changeCount;
+        newEvents.push(...applied.events);
         results.push({
           source: snapshot.source,
           status: 'ok',
@@ -189,6 +193,10 @@ export class SyncService {
           ...(applied.baseline ? { baseline: true } : {}),
         });
       }
+
+      // Notifications are created in the same transaction as the changes they announce.
+      await this.notifications.fanOut(tx, device.userId, newEvents);
+      const changeCount = newEvents.length;
 
       const okCount = results.filter((result) => result.status === 'ok').length;
       const status = okCount === results.length ? 'completed' : okCount > 0 ? 'partial' : 'failed';
@@ -217,7 +225,7 @@ export class SyncService {
     runId: string,
     source: SnapshotRequest['sources'][number]['source'],
     incoming: NormalizedEntity[],
-  ): Promise<{ entityCount: number; changeCount: number; baseline: boolean }> {
+  ): Promise<{ entityCount: number; events: ChangeRow[]; baseline: boolean }> {
     const types = [...SOURCE_ENTITY_TYPES[source]];
     // Never trust client fingerprints: canonicalize and fingerprint again on the server.
     const next = await Promise.all(
@@ -302,7 +310,7 @@ export class SyncService {
       }
     }
 
-    let changeCount = 0;
+    const events: ChangeRow[] = [];
     if (!baseline && changes.length > 0) {
       const before = new Map(previous.map((e) => [`${e.entityType}\u0000${e.externalKey}`, e]));
       const after = new Map(next.map((e) => [`${e.entityType}\u0000${e.externalKey}`, e]));
@@ -346,11 +354,11 @@ export class SyncService {
             }),
           )
           .onConflictDoNothing({ target: changeEvents.idempotencyKey })
-          .returning({ id: changeEvents.id });
-        changeCount += inserted.length;
+          .returning();
+        events.push(...inserted);
       }
     }
-    return { entityCount: next.length, changeCount, baseline };
+    return { entityCount: next.length, events, baseline };
   }
 
   async listChanges(userId: string, query: ChangeListQuery): Promise<ChangeListResponse> {

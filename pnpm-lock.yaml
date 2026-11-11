@@ -71,6 +71,9 @@ importers:
       '@campuswatch/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@campuswatch/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@campuswatch/portal-core':
         specifier: workspace:*
         version: link:../../packages/portal-core
@@ -144,6 +147,9 @@ importers:
       '@campuswatch/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@campuswatch/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@campuswatch/portal-core':
         specifier: workspace:*
         version: link:../../packages/portal-core
@@ -184,6 +190,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@campuswatch/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@campuswatch/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@campuswatch/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@nestjs/bullmq':
         specifier: 12.0.1
         version: 12.0.1(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.4.2(@nestjs/common@12.4.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(bullmq@6.7.3(ioredis@6.0.0)(pg@8.23.1))
@@ -196,9 +211,15 @@ importers:
       bullmq:
         specifier: 6.7.3
         version: 6.7.3(ioredis@6.0.0)(pg@8.23.1)
+      drizzle-orm:
+        specifier: 0.45.4
+        version: 0.45.4(@types/pg@8.23.1)(pg@8.23.1)
       ioredis:
         specifier: 6.0.0
         version: 6.0.0
+      pg:
+        specifier: 8.23.1
+        version: 8.23.1
       reflect-metadata:
         specifier: 'catalog:'
         version: 0.2.2
@@ -221,6 +242,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
+      '@types/pg':
+        specifier: 8.23.1
+        version: 8.23.1
       eslint:
         specifier: 'catalog:'
         version: 10.14.0(jiti@2.7.0)
@@ -339,6 +363,31 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+
+  packages/notifications:
+    dependencies:
+      '@campuswatch/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.7
+    devDependencies:
+      '@campuswatch/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      eslint:
+        specifier: 'catalog:'
+        version: 10.14.0(jiti@2.7.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.0(@types/node@22.20.5)(happy-dom@21.0.4)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/portal-core:
     dependencies:

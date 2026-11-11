@@ -41,6 +41,32 @@ describe('loadApiConfig', () => {
   });
 });
 
+describe('Telegram configuration', () => {
+  const telegram = {
+    TELEGRAM_BOT_TOKEN: '123456789:test_token_not_real_test_token_not_real',
+    TELEGRAM_BOT_USERNAME: 'CampusWatchBot',
+    TELEGRAM_WEBHOOK_SECRET: 'w'.repeat(40),
+    ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+  };
+
+  it('is disabled unless every Telegram variable is set', () => {
+    expect(loadApiConfig({}).telegram).toBeNull();
+    expect(loadApiConfig(telegram).telegram).toMatchObject({ botUsername: 'CampusWatchBot' });
+  });
+
+  it('rejects a partial Telegram configuration without echoing values', () => {
+    const load = () => loadApiConfig({ TELEGRAM_BOT_TOKEN: telegram.TELEGRAM_BOT_TOKEN });
+    expect(load).toThrow(/ENCRYPTION_KEY: Required when Telegram is enabled/);
+    expect(load).not.toThrow(/test_token_not_real/);
+  });
+
+  it('rejects an encryption key that is not 32 bytes', () => {
+    expect(() => loadApiConfig({ ...telegram, ENCRYPTION_KEY: 'c2hvcnQ=' })).toThrow(
+      /ENCRYPTION_KEY: Must be 32 bytes/,
+    );
+  });
+});
+
 describe('enabledLogLevels', () => {
   it('enables the threshold and every more severe level', () => {
     expect(enabledLogLevels('warn')).toEqual(['fatal', 'error', 'warn']);

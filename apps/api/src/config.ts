@@ -21,8 +21,41 @@ const apiEnvSchema = z
     AUTH_SECRET: z.string().min(32, 'Must be at least 32 characters').optional(),
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+    TELEGRAM_BOT_TOKEN: z
+      .string()
+      .regex(/^\d{5,}:[A-Za-z0-9_-]{30,}$/, 'Must be a Telegram bot token')
+      .optional(),
+    TELEGRAM_BOT_USERNAME: z
+      .string()
+      .regex(/^[A-Za-z0-9_]{5,32}$/, 'Must be a Telegram bot username without @')
+      .optional(),
+    TELEGRAM_WEBHOOK_SECRET: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{32,256}$/, 'Must be 32-256 characters of A-Z, a-z, 0-9, _ or -')
+      .optional(),
+    ENCRYPTION_KEY: z
+      .string()
+      .refine((value) => Buffer.from(value, 'base64').length === 32, 'Must be 32 bytes, base64')
+      .optional(),
   })
   .superRefine((env, context) => {
+    const telegramKeys = [
+      'TELEGRAM_BOT_TOKEN',
+      'TELEGRAM_BOT_USERNAME',
+      'TELEGRAM_WEBHOOK_SECRET',
+      'ENCRYPTION_KEY',
+    ] as const;
+    if (telegramKeys.some((key) => key !== 'ENCRYPTION_KEY' && env[key] !== undefined)) {
+      for (const key of telegramKeys) {
+        if (env[key] === undefined) {
+          context.addIssue({
+            code: 'custom',
+            path: [key],
+            message: 'Required when Telegram is enabled',
+          });
+        }
+      }
+    }
     if (env.NODE_ENV !== 'production') {
       return;
     }
@@ -49,6 +82,13 @@ export interface ApiConfig {
     readonly accessTokenTtlSeconds: number;
     readonly refreshTokenTtlDays: number;
   };
+  /** `null` when no Telegram bot is configured: Telegram delivery is disabled. */
+  readonly telegram: {
+    readonly botToken: string;
+    readonly botUsername: string;
+    readonly webhookSecret: string;
+    readonly encryptionKey: string;
+  } | null;
 }
 
 export class ConfigError extends Error {
@@ -83,6 +123,18 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       accessTokenTtlSeconds: data.ACCESS_TOKEN_TTL_SECONDS,
       refreshTokenTtlDays: data.REFRESH_TOKEN_TTL_DAYS,
     },
+    telegram:
+      data.TELEGRAM_BOT_TOKEN &&
+      data.TELEGRAM_BOT_USERNAME &&
+      data.TELEGRAM_WEBHOOK_SECRET &&
+      data.ENCRYPTION_KEY
+        ? {
+            botToken: data.TELEGRAM_BOT_TOKEN,
+            botUsername: data.TELEGRAM_BOT_USERNAME,
+            webhookSecret: data.TELEGRAM_WEBHOOK_SECRET,
+            encryptionKey: data.ENCRYPTION_KEY,
+          }
+        : null,
   };
 }
 

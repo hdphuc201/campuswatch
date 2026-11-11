@@ -98,5 +98,6 @@ export const ERROR_MESSAGES: Record<UserErrorCode, string> = {
   network: 'Cannot reach CampusWatch. Check your internet connection.',
   rate_limited: 'Too many attempts. Please wait a few minutes.',
   not_connected: 'The Portal connection no longer exists. Connect again.',
+  telegram_unavailable: 'Telegram notifications are not available yet.',
   unexpected: 'Something went wrong. Please try again.',
 };

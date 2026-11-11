@@ -1,7 +1,13 @@
-import type { PortalConnection } from '@campuswatch/contracts';
+import { notificationPreferencesSchema, type PortalConnection } from '@campuswatch/contracts';
 import { ApiError, type CampusWatchApi, NetworkError, SessionExpiredError } from '../api/client.js';
 import { CONSENT_VERSION, SYNC_POLICY } from '../config.js';
-import type { Command, CommandResult, ExtensionView, UserErrorCode } from '../messaging.js';
+import type {
+  Command,
+  CommandResult,
+  ExtensionView,
+  SettingsView,
+  UserErrorCode,
+} from '../messaging.js';
 import {
   type ExtensionState,
   INITIAL_SYNC_STATE,
@@ -19,6 +25,8 @@ export interface ControllerDeps {
   readonly adapterAvailable: boolean;
   readonly adapterBeta: boolean;
   readonly now: () => Date;
+  /** Opens a URL in a new tab (Telegram deep link). */
+  readonly openUrl?: (url: string) => Promise<void>;
 }
 
 class UserFacingError extends Error {
@@ -52,6 +60,14 @@ export class ExtensionController {
           ? await this.deps.api.listChanges(RECENT_CHANGES)
           : [];
         return { ok: true, view: await this.view(), changes };
+      }
+      if (
+        command.type === 'getSettings' ||
+        command.type === 'savePreferences' ||
+        command.type === 'telegramLink' ||
+        command.type === 'telegramUnlink'
+      ) {
+        return { ok: true, view: await this.view(), settings: await this.settings(command) };
       }
       const outcome = await this.dispatch(command);
       return { ok: true, view: await this.view(), ...(outcome ? { outcome } : {}) };
@@ -162,8 +178,46 @@ export class ExtensionController {
       case 'syncNow':
         return engine.run('manual');
       case 'getChanges':
+      case 'getSettings':
+      case 'savePreferences':
+      case 'telegramLink':
+      case 'telegramUnlink':
         return undefined;
     }
+  }
+
+  private async settings(
+    command: Extract<
+      Command,
+      { type: 'getSettings' | 'savePreferences' | 'telegramLink' | 'telegramUnlink' }
+    >,
+  ): Promise<SettingsView> {
+    const { api } = this.deps;
+    if (command.type === 'savePreferences') {
+      const parsed = notificationPreferencesSchema.safeParse(command.preferences);
+      if (!parsed.success) {
+        throw new UserFacingError('invalid_input');
+      }
+      await api.savePreferences(parsed.data);
+    } else if (command.type === 'telegramLink') {
+      try {
+        const { deepLink } = await api.telegramStart();
+        await this.deps.openUrl?.(deepLink);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 503) {
+          throw new UserFacingError('telegram_unavailable');
+        }
+        throw error;
+      }
+    } else if (command.type === 'telegramUnlink') {
+      await api.telegramUnlink();
+    }
+    const [preferences, telegram, deliveries] = await Promise.all([
+      api.getPreferences(),
+      api.telegramStatus(),
+      api.listDeliveries(20),
+    ]);
+    return { preferences, telegram, deliveries };
   }
 
   private async signIn(email: string, password: string): Promise<void> {

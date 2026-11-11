@@ -4,27 +4,43 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module.js';
 import { loadApiConfig } from '../../src/config.js';
 import { createHttpAdapter } from '../../src/http.js';
-import { createTestDatabase, type TestDatabase } from './test-database.js';
+import { TELEGRAM_CLIENT } from '../../src/notifications/telegram.service.js';
+import { FakeTelegramClient } from '@campuswatch/notifications/server';
+import { createTestDatabase, type TestDatabase } from '@campuswatch/db/testing';
 
 export interface TestApp {
   readonly app: NestFastifyApplication;
   /** URL of this test file's throwaway database, for direct assertions. */
   readonly databaseUrl: string;
+  /** Messages "sent" to Telegram (only when created with `telegram: true`). */
+  readonly telegram: FakeTelegramClient;
   close(): Promise<void>;
 }
 
 /** Boots the real application module against a fresh database. */
-export async function createTestApp(): Promise<TestApp> {
+export const TEST_TELEGRAM = {
+  TELEGRAM_BOT_TOKEN: '123456789:test_token_not_real_test_token_not_real',
+  TELEGRAM_BOT_USERNAME: 'CampusWatchTestBot',
+  TELEGRAM_WEBHOOK_SECRET: 'test-webhook-secret-test-webhook-secret',
+  ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
+};
+
+export async function createTestApp(options: { telegram?: boolean } = {}): Promise<TestApp> {
   const database: TestDatabase = await createTestDatabase();
+  const telegram = new FakeTelegramClient();
   const config = loadApiConfig({
     NODE_ENV: 'test',
     DATABASE_URL: database.url,
     DATABASE_POOL_MAX: '5',
     AUTH_SECRET: 'integration-test-secret-integration-test',
+    ...(options.telegram ? TEST_TELEGRAM : {}),
   });
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule.register(config)],
-  }).compile();
+  })
+    .overrideProvider(TELEGRAM_CLIENT)
+    .useValue(options.telegram ? telegram : null)
+    .compile();
   const app = moduleRef.createNestApplication<NestFastifyApplication>(createHttpAdapter(), {
     logger: false,
   });
@@ -33,6 +49,7 @@ export async function createTestApp(): Promise<TestApp> {
   return {
     app,
     databaseUrl: database.url,
+    telegram,
     close: async () => {
       await app.close();
       await database.drop();

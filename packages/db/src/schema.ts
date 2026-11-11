@@ -3,6 +3,7 @@
 // Keep this file free of relative and workspace imports: drizzle-kit loads it directly.
 import { sql } from 'drizzle-orm';
 import {
+  boolean,
   check,
   index,
   integer,
@@ -42,6 +43,15 @@ export const ENTITY_TYPES = [
 
 export const CHANGE_KINDS = ['ADDED', 'UPDATED', 'REMOVED'] as const;
 export const SYNC_RUN_STATUSES = ['completed', 'partial', 'failed'] as const;
+export const NOTIFICATION_CHANNELS = ['chrome', 'telegram'] as const;
+export const NOTIFICATION_CATEGORIES = [
+  'grades',
+  'tuition',
+  'timetable',
+  'exams',
+  'notices',
+] as const;
+export const DELIVERY_STATUSES = ['pending', 'sending', 'sent', 'failed', 'skipped'] as const;
 
 /** Canonical values only (see `canonicalValueSchema`): never HTML, cookies, or tokens. */
 export type CanonicalJson = Record<string, string | number | boolean | null>;
@@ -260,4 +270,84 @@ export const changeEvents = pgTable(
     index('change_events_connection_created_idx').on(table.connectionId, table.createdAt),
     check('change_events_kind_valid', sql`${table.kind} in (${sqlList(CHANGE_KINDS)})`),
   ],
+);
+
+/** Per-user notification preferences (validated `NotificationPreferences` JSON). */
+export const notificationPreferences = pgTable('notification_preferences', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  settings: jsonb('settings').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * One row per change event and channel. Chrome rows are claimed by a device and acknowledged;
+ * Telegram rows are claimed and sent by the worker.
+ */
+export const notificationDeliveries = pgTable(
+  'notification_deliveries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    changeEventId: uuid('change_event_id')
+      .notNull()
+      .references(() => changeEvents.id, { onDelete: 'cascade' }),
+    channel: text('channel', { enum: NOTIFICATION_CHANNELS }).notNull(),
+    category: text('category', { enum: NOTIFICATION_CATEGORIES }).notNull(),
+    urgent: boolean('urgent').notNull(),
+    status: text('status', { enum: DELIVERY_STATUSES }).notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    deliverAfter: timestamp('deliver_after', { withTimezone: true }).notNull(),
+    claimedUntil: timestamp('claimed_until', { withTimezone: true }),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    /** Error category only (e.g. "telegram_403"); never message content. */
+    lastErrorCode: text('last_error_code'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    unique('notification_deliveries_event_channel_unique').on(table.changeEventId, table.channel),
+    index('notification_deliveries_due_idx').on(table.channel, table.status, table.deliverAfter),
+    index('notification_deliveries_user_idx').on(table.userId, table.createdAt),
+    check(
+      'notification_deliveries_status_valid',
+      sql`${table.status} in (${sqlList(DELIVERY_STATUSES)})`,
+    ),
+    check(
+      'notification_deliveries_channel_valid',
+      sql`${table.channel} in (${sqlList(NOTIFICATION_CHANNELS)})`,
+    ),
+  ],
+);
+
+/** A user's linked Telegram chat. The chat id is encrypted; the hash allows lookups. */
+export const telegramLinks = pgTable(
+  'telegram_links',
+  {
+    userId: uuid('user_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    chatIdEncrypted: text('chat_id_encrypted').notNull(),
+    chatIdHash: text('chat_id_hash').notNull(),
+    linkedAt: timestamp('linked_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('telegram_links_chat_id_hash_idx').on(table.chatIdHash)],
+);
+
+/** One-time Telegram link codes (stored hashed, 10-minute TTL). */
+export const telegramLinkNonces = pgTable(
+  'telegram_link_nonces',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    nonceHash: text('nonce_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (table) => [index('telegram_link_nonces_user_idx').on(table.userId)],
 );

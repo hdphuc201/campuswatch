@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 const LOG_LEVELS = ['fatal', 'error', 'warn', 'log', 'debug', 'verbose'] as const;
 const LOCAL_REDIS_URL = 'redis://127.0.0.1:6379';
+/** Matches the defaults in infra/docker-compose.yml. Local development only. */
+const LOCAL_DATABASE_URL = 'postgresql://campuswatch:campuswatch_local@127.0.0.1:5432/campuswatch';
 
 const workerEnvSchema = z
   .object({
@@ -11,10 +13,35 @@ const workerEnvSchema = z
     REDIS_URL: z
       .url({ protocol: /^rediss?$/, error: 'Must be a redis:// or rediss:// URL' })
       .optional(),
+    DATABASE_URL: z
+      .url({ protocol: /^postgres(ql)?$/, error: 'Must be a postgresql:// URL' })
+      .optional(),
+    TELEGRAM_BOT_TOKEN: z
+      .string()
+      .regex(/^\d{5,}:[A-Za-z0-9_-]{30,}$/, 'Must be a Telegram bot token')
+      .optional(),
+    ENCRYPTION_KEY: z
+      .string()
+      .refine((value) => Buffer.from(value, 'base64').length === 32, 'Must be 32 bytes, base64')
+      .optional(),
+    TELEGRAM_DISPATCH_INTERVAL_SECONDS: z.coerce.number().int().min(5).max(3600).default(30),
   })
-  .refine((env) => env.NODE_ENV !== 'production' || env.REDIS_URL !== undefined, {
-    path: ['REDIS_URL'],
-    error: 'Required in production',
+  .superRefine((env, context) => {
+    if (env.TELEGRAM_BOT_TOKEN !== undefined && env.ENCRYPTION_KEY === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['ENCRYPTION_KEY'],
+        message: 'Required when Telegram is enabled',
+      });
+    }
+    if (env.NODE_ENV !== 'production') {
+      return;
+    }
+    for (const key of ['REDIS_URL', 'DATABASE_URL'] as const) {
+      if (env[key] === undefined) {
+        context.addIssue({ code: 'custom', path: [key], message: 'Required in production' });
+      }
+    }
   });
 
 export interface RedisConnectionConfig {
@@ -30,6 +57,10 @@ export interface WorkerConfig {
   readonly nodeEnv: 'development' | 'test' | 'production';
   readonly logLevel: LogLevel;
   readonly redis: RedisConnectionConfig;
+  readonly databaseUrl: string;
+  /** `null` when no bot token is configured: Telegram delivery is disabled. */
+  readonly telegram: { readonly botToken: string; readonly encryptionKey: string } | null;
+  readonly telegramDispatchIntervalSeconds: number;
 }
 
 export class ConfigError extends Error {
@@ -65,11 +96,17 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
       .join('; ');
     throw new ConfigError(`Invalid worker configuration: ${details}`);
   }
-  const { NODE_ENV, LOG_LEVEL, REDIS_URL } = result.data;
+  const data = result.data;
   return {
-    nodeEnv: NODE_ENV,
-    logLevel: LOG_LEVEL,
-    redis: parseRedisUrl(REDIS_URL ?? LOCAL_REDIS_URL),
+    nodeEnv: data.NODE_ENV,
+    logLevel: data.LOG_LEVEL,
+    redis: parseRedisUrl(data.REDIS_URL ?? LOCAL_REDIS_URL),
+    databaseUrl: data.DATABASE_URL ?? LOCAL_DATABASE_URL,
+    telegram:
+      data.TELEGRAM_BOT_TOKEN && data.ENCRYPTION_KEY
+        ? { botToken: data.TELEGRAM_BOT_TOKEN, encryptionKey: data.ENCRYPTION_KEY }
+        : null,
+    telegramDispatchIntervalSeconds: data.TELEGRAM_DISPATCH_INTERVAL_SECONDS,
   };
 }
 

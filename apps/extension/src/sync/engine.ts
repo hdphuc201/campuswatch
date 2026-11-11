@@ -2,6 +2,7 @@ import {
   PORTAL_DATA_SOURCES,
   type PortalDataSource,
   type ProbeReportRequest,
+  type RenderedNotification,
   type SourceSnapshot,
 } from '@campuswatch/contracts';
 import type {
@@ -44,6 +45,12 @@ export interface SyncEngineDeps {
   readonly adapter: PortalAdapter | null;
   readonly now: () => Date;
   readonly random?: () => number;
+  /** Shows a Chrome notification; omitted in contexts without the notifications API. */
+  readonly notifier?: Notifier;
+}
+
+export interface Notifier {
+  show(notification: RenderedNotification): Promise<void>;
 }
 
 const PROBE_RESULT: Record<SessionProbeResult['state'], ProbeReportRequest['result']> = {
@@ -183,7 +190,30 @@ export class SyncEngine {
       await adapter.dispose?.().catch(() => undefined);
     }
     await this.finish(result);
+    if (result !== 'device_revoked') {
+      await this.deliverNotifications();
+    }
     return result;
+  }
+
+  /**
+   * Shows due Chrome notifications for this user (one notification per batch) and
+   * acknowledges them. Best effort: failures leave them claimable on a later run.
+   */
+  private async deliverNotifications(): Promise<void> {
+    const notifier = this.deps.notifier;
+    if (!notifier) {
+      return;
+    }
+    try {
+      const batch = await this.deps.api.pendingNotifications();
+      if (batch.notification && batch.deliveryIds.length > 0) {
+        await notifier.show(batch.notification);
+        await this.deps.api.ackNotifications(batch.deliveryIds);
+      }
+    } catch {
+      // Unacknowledged deliveries become available again after their claim expires.
+    }
   }
 
   /** Collects every source; one failing source does not stop the others. */

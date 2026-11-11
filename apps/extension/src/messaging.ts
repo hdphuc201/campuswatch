@@ -1,4 +1,9 @@
-import type { ChangeEvent } from '@campuswatch/contracts';
+import type {
+  ChangeEvent,
+  Delivery,
+  NotificationPreferences,
+  TelegramLinkStatus,
+} from '@campuswatch/contracts';
 import type { StoredConnection, SyncState } from './storage/extension-state.js';
 import type { SyncOutcome } from './sync/engine.js';
 
@@ -13,7 +18,18 @@ export type Command =
   | { readonly type: 'pause' }
   | { readonly type: 'resume' }
   | { readonly type: 'syncNow' }
-  | { readonly type: 'getChanges' };
+  | { readonly type: 'getChanges' }
+  | { readonly type: 'getSettings' }
+  | { readonly type: 'savePreferences'; readonly preferences: NotificationPreferences }
+  | { readonly type: 'telegramLink' }
+  | { readonly type: 'telegramUnlink' };
+
+/** Notification settings shown on the options page. */
+export interface SettingsView {
+  readonly preferences: NotificationPreferences;
+  readonly telegram: TelegramLinkStatus;
+  readonly deliveries: Delivery[];
+}
 
 /** What the popup renders. Contains no tokens. */
 export interface ExtensionView {
@@ -37,6 +53,7 @@ export type UserErrorCode =
   | 'network'
   | 'rate_limited'
   | 'not_connected'
+  | 'telegram_unavailable'
   | 'unexpected';
 
 export type CommandResult =
@@ -46,6 +63,8 @@ export type CommandResult =
       readonly outcome?: SyncOutcome;
       /** Present for `getChanges`: the most recent changes, newest first. */
       readonly changes?: ChangeEvent[];
+      /** Present for settings commands. */
+      readonly settings?: SettingsView;
     }
   | {
       readonly ok: false;
@@ -64,6 +83,10 @@ export const COMMAND_TYPES: readonly Command['type'][] = [
   'resume',
   'syncNow',
   'getChanges',
+  'getSettings',
+  'savePreferences',
+  'telegramLink',
+  'telegramUnlink',
 ];
 
 /** Rejects anything that is not a well-formed command (messages can come from any page script). */
@@ -71,12 +94,16 @@ export function isCommand(message: unknown): message is Command {
   if (typeof message !== 'object' || message === null) {
     return false;
   }
-  const { type, email, password } = message as Record<string, unknown>;
+  const { type, email, password, preferences } = message as Record<string, unknown>;
   if (!COMMAND_TYPES.includes(type as Command['type'])) {
     return false;
   }
   if (type === 'register' || type === 'signIn') {
     return typeof email === 'string' && typeof password === 'string';
+  }
+  if (type === 'savePreferences') {
+    // Shape is validated against the shared schema by the controller.
+    return typeof preferences === 'object' && preferences !== null;
   }
   return true;
 }

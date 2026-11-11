@@ -1,8 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import pg from 'pg';
-import { runMigrations } from '@campuswatch/db';
+import { runMigrations } from './migrate.js';
 
-/** Admin connection used to create and drop throwaway databases (local default: infra compose). */
+/**
+ * Test helper (not for production code): throwaway databases for integration tests.
+ * Admin connection used to create and drop them (local default: infra compose).
+ */
 const ADMIN_URL =
   process.env.TEST_DATABASE_URL ??
   'postgresql://campuswatch:campuswatch_local@127.0.0.1:5432/postgres';

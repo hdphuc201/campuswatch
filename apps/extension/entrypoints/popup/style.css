@@ -27,10 +27,46 @@
 
 body {
   margin: 0;
-  width: 340px;
+  min-width: 340px;
+}
+
+.options {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.options section,
+.options form {
+  margin-bottom: 24px;
+}
+
+.grid {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.grid th,
+.grid td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--neutral-bg);
+  text-align: left;
+}
+
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+}
+
+select {
+  padding: 6px 8px;
+  font: inherit;
 }
 
 .popup {
+  width: 340px;
   padding: 16px;
 }
 

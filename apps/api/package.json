@@ -16,6 +16,7 @@
   "dependencies": {
     "@campuswatch/contracts": "workspace:*",
     "@campuswatch/db": "workspace:*",
+    "@campuswatch/notifications": "workspace:*",
     "@campuswatch/portal-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",

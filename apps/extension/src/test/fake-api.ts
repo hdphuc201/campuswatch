@@ -1,8 +1,11 @@
-import type {
-  ChangeEvent,
-  ConnectionHealthState,
-  PortalConnection,
-  SnapshotRequest,
+import {
+  type ChangeEvent,
+  type ConnectionHealthState,
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  type NotificationPreferences,
+  type PendingNotificationsResponse,
+  type PortalConnection,
+  type SnapshotRequest,
 } from '@campuswatch/contracts';
 
 interface FakeConnection extends PortalConnection {
@@ -23,6 +26,18 @@ export function createFakeApi() {
   const calls: string[] = [];
   const snapshots: SnapshotRequest[] = [];
   const changes: ChangeEvent[] = [];
+  const acked: string[] = [];
+  const notifications: {
+    pending: PendingNotificationsResponse;
+    preferences: NotificationPreferences;
+    telegramAvailable: boolean;
+    telegramLinked: boolean;
+  } = {
+    pending: { notification: null, deliveryIds: [] },
+    preferences: DEFAULT_NOTIFICATION_PREFERENCES,
+    telegramAvailable: true,
+    telegramLinked: false,
+  };
   let counter = 0;
   let offline = false;
   let failNext: number | undefined;
@@ -145,8 +160,49 @@ export function createFakeApi() {
       });
     }
 
+    if (path === '/notifications/pending' || path === '/notifications/ack') {
+      if (!device) {
+        return json(401);
+      }
+      if (path === '/notifications/ack') {
+        acked.push(...(body as unknown as { deliveryIds: string[] }).deliveryIds);
+        return json(204);
+      }
+      const batch = notifications.pending;
+      notifications.pending = { notification: null, deliveryIds: [] };
+      return json(200, batch);
+    }
+
     if (!userEmail) {
       return json(401);
+    }
+    if (path === '/notification-preferences') {
+      if (method === 'PUT') {
+        notifications.preferences = body as unknown as NotificationPreferences;
+      }
+      return json(200, notifications.preferences);
+    }
+    if (path === '/notifications') {
+      return json(200, { deliveries: [] });
+    }
+    if (path === '/telegram/link/start') {
+      return notifications.telegramAvailable
+        ? json(200, {
+            deepLink: 'https://t.me/CampusWatchBot?start=abcdefghijklmnopqrstuvwxyz012345',
+            expiresAt: new Date(Date.now() + 600_000).toISOString(),
+          })
+        : json(503, { code: 'telegram_unavailable' });
+    }
+    if (path === '/telegram/link') {
+      if (method === 'DELETE') {
+        notifications.telegramLinked = false;
+        return json(204);
+      }
+      return json(200, {
+        available: notifications.telegramAvailable,
+        linked: notifications.telegramLinked,
+        linkedAt: notifications.telegramLinked ? new Date().toISOString() : null,
+      });
     }
     if (method === 'GET' && path === '/changes') {
       return json(200, { changes, nextCursor: null });
@@ -228,6 +284,8 @@ export function createFakeApi() {
     calls,
     snapshots,
     changes,
+    acked,
+    notifications,
     connections,
     devices,
     /** Expires every access token, as if 15 minutes passed. */

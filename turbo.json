@@ -39,7 +39,12 @@
         "AUTH_SECRET",
         "ACCESS_TOKEN_TTL_SECONDS",
         "REFRESH_TOKEN_TTL_DAYS",
-        "REDIS_URL"
+        "REDIS_URL",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_BOT_USERNAME",
+        "TELEGRAM_WEBHOOK_SECRET",
+        "ENCRYPTION_KEY",
+        "TELEGRAM_DISPATCH_INTERVAL_SECONDS"
       ]
     }
   }

@@ -5,6 +5,7 @@ import { ApiConfigModule } from './config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { DevicesModule } from './devices/devices.module.js';
 import { HealthController } from './health/health.controller.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 import { PortalConnectionsModule } from './portal-connections/portal-connections.module.js';
 import { SyncModule } from './sync/sync.module.js';
 
@@ -20,6 +21,7 @@ export class AppModule {
         DevicesModule,
         PortalConnectionsModule,
         SyncModule,
+        NotificationsModule,
       ],
       controllers: [HealthController],
     };

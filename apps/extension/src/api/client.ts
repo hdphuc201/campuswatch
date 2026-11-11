@@ -3,6 +3,12 @@ import {
   authTokensResponseSchema,
   type ChangeEvent,
   changeListResponseSchema,
+  type Delivery,
+  deliveryListResponseSchema,
+  type NotificationPreferences,
+  notificationPreferencesSchema,
+  type PendingNotificationsResponse,
+  pendingNotificationsResponseSchema,
   type PortalConnection,
   portalConnectionListResponseSchema,
   portalConnectionSchema,
@@ -12,6 +18,10 @@ import {
   type SnapshotRequest,
   type SyncRunResult,
   syncRunResultSchema,
+  type TelegramLinkStartResponse,
+  telegramLinkStartResponseSchema,
+  type TelegramLinkStatus,
+  telegramLinkStatusSchema,
 } from '@campuswatch/contracts';
 import type { ExtensionState } from '../storage/extension-state.js';
 
@@ -156,6 +166,54 @@ export class CampusWatchApi {
       undefined,
       (body) => changeListResponseSchema.parse(body).changes,
     );
+  }
+
+  pendingNotifications(): Promise<PendingNotificationsResponse> {
+    return this.request('GET', '/notifications/pending', { kind: 'device' }, undefined, (body) =>
+      pendingNotificationsResponseSchema.parse(body),
+    );
+  }
+
+  async ackNotifications(deliveryIds: string[]): Promise<void> {
+    await this.request('POST', '/notifications/ack', { kind: 'device' }, { deliveryIds });
+  }
+
+  getPreferences(): Promise<NotificationPreferences> {
+    return this.request('GET', '/notification-preferences', { kind: 'user' }, undefined, (body) =>
+      notificationPreferencesSchema.parse(body),
+    );
+  }
+
+  savePreferences(preferences: NotificationPreferences): Promise<NotificationPreferences> {
+    return this.request('PUT', '/notification-preferences', { kind: 'user' }, preferences, (body) =>
+      notificationPreferencesSchema.parse(body),
+    );
+  }
+
+  listDeliveries(limit: number): Promise<Delivery[]> {
+    return this.request(
+      'GET',
+      `/notifications?limit=${limit}`,
+      { kind: 'user' },
+      undefined,
+      (body) => deliveryListResponseSchema.parse(body).deliveries,
+    );
+  }
+
+  telegramStatus(): Promise<TelegramLinkStatus> {
+    return this.request('GET', '/telegram/link', { kind: 'user' }, undefined, (body) =>
+      telegramLinkStatusSchema.parse(body),
+    );
+  }
+
+  telegramStart(): Promise<TelegramLinkStartResponse> {
+    return this.request('POST', '/telegram/link/start', { kind: 'user' }, undefined, (body) =>
+      telegramLinkStartResponseSchema.parse(body),
+    );
+  }
+
+  async telegramUnlink(): Promise<void> {
+    await this.request('DELETE', '/telegram/link', { kind: 'user' });
   }
 
   private async request<T = void>(

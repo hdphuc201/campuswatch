@@ -1,7 +1,7 @@
 import type { ChangeEvent } from '@campuswatch/contracts';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { describeChange } from './changes.js';
+import { describeChange } from '@campuswatch/notifications';
 import { RecentChanges } from './components.js';
 
 const base = {

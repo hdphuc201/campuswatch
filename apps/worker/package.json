@@ -10,14 +10,20 @@
     "start": "node --env-file-if-exists=../../.env dist/main.js",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@campuswatch/contracts": "workspace:*",
+    "@campuswatch/db": "workspace:*",
+    "@campuswatch/notifications": "workspace:*",
     "@nestjs/bullmq": "12.0.1",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
     "bullmq": "6.7.3",
+    "drizzle-orm": "0.45.4",
     "ioredis": "6.0.0",
+    "pg": "8.23.1",
     "reflect-metadata": "catalog:",
     "rxjs": "catalog:",
     "zod": "catalog:"
@@ -27,6 +33,7 @@
     "@nestjs/cli": "catalog:",
     "@swc/core": "catalog:",
     "@types/node": "catalog:",
+    "@types/pg": "8.23.1",
     "eslint": "catalog:",
     "typescript": "catalog:",
     "unplugin-swc": "catalog:",

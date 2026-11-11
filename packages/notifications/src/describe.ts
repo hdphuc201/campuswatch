@@ -5,6 +5,11 @@ export interface ChangeDescription {
   readonly details: string[];
 }
 
+type DescribableChange = Pick<
+  ChangeEvent,
+  'entityType' | 'externalKey' | 'kind' | 'changedFields' | 'payload'
+>;
+
 const FIELD_LABELS: Record<string, string> = {
   totalScore: 'Total score',
   totalScore4: 'Total (4-point)',
@@ -57,14 +62,13 @@ function formatValue(field: string, value: CanonicalValue | undefined): string {
 }
 
 function text(value: CanonicalValue | undefined): string {
-  return typeof value === 'string'
-    ? value
-    : value === undefined || value === null
-      ? ''
-      : String(value);
+  if (value === undefined || value === null) {
+    return '';
+  }
+  return typeof value === 'string' ? value : String(value);
 }
 
-function subject(change: ChangeEvent): string {
+function subject(change: DescribableChange): string {
   const p = change.payload;
   switch (change.entityType) {
     case 'grade_course':
@@ -86,8 +90,8 @@ function subject(change: ChangeEvent): string {
   }
 }
 
-/** Plain-language description of one change, for the popup (the user's own data). */
-export function describeChange(change: ChangeEvent): ChangeDescription {
+/** Detailed, plain-language description of one change (contains the student's data). */
+export function describeChange(change: DescribableChange): ChangeDescription {
   const what = subject(change);
   const title =
     change.kind === 'ADDED'
