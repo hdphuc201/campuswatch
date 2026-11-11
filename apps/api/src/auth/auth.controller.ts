@@ -1,5 +1,6 @@
 import {
   type AuthTokensResponse,
+  type RegisterAcceptedResponse,
   type LoginRequest,
   loginRequestSchema,
   type RefreshTokenRequest,
@@ -10,6 +11,7 @@ import {
 } from '@campuswatch/contracts';
 import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { RateLimit } from '../security/rate-limit.js';
 import { AuthService } from './auth.service.js';
 import { CurrentUserId, Public } from './principal.js';
 
@@ -17,16 +19,23 @@ import { CurrentUserId, Public } from './principal.js';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
+  /**
+   * Always 202 with the same body, whether the email is new or already registered, so the
+   * endpoint cannot be used to discover accounts. The client signs in afterwards.
+   */
   @Public()
+  @RateLimit('register')
   @Post('register')
-  @HttpCode(201)
-  register(
+  @HttpCode(202)
+  async register(
     @Body(new ZodValidationPipe(registerRequestSchema)) body: RegisterRequest,
-  ): Promise<AuthTokensResponse> {
-    return this.auth.register(body);
+  ): Promise<RegisterAcceptedResponse> {
+    await this.auth.register(body);
+    return { status: 'accepted' };
   }
 
   @Public()
+  @RateLimit('login')
   @Post('login')
   @HttpCode(200)
   login(
@@ -36,6 +45,7 @@ export class AuthController {
   }
 
   @Public()
+  @RateLimit('refresh')
   @Post('refresh')
   @HttpCode(200)
   refresh(

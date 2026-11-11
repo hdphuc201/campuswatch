@@ -36,7 +36,7 @@ page shows "Telegram notifications are not available yet".
 
 ## Verify end to end (staging)
 
-1. In the extension: **Notification settings → Link Telegram**. Telegram opens the bot with a
+1. In the extension: **Settings and data → Link Telegram**. Telegram opens the bot with a
    code; press **Start**. The bot replies "CampusWatch is linked".
 2. Trigger a change with fixture data (see `docs/runbooks/staging-e2e.md`); within 30 seconds
    the chat receives a summary message without scores or amounts.

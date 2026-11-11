@@ -153,7 +153,7 @@ export function Dashboard(props: {
       <div className="row">
         {props.onOpenSettings ? (
           <button type="button" className="link" onClick={props.onOpenSettings}>
-            Notification settings
+            Settings and data
           </button>
         ) : null}
         <button type="button" className="link" onClick={() => onCommand({ type: 'disconnect' })}>

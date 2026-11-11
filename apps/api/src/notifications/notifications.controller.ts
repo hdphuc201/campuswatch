@@ -18,6 +18,7 @@ import {
   Public,
 } from '../auth/principal.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { RateLimit } from '../security/rate-limit.js';
 import { NotificationsService } from './notifications.service.js';
 import { TelegramService } from './telegram.service.js';
 
@@ -57,6 +58,7 @@ export class NotificationsController {
   }
 
   @DeviceAuth()
+  @RateLimit('pendingNotifications')
   @Get('notifications/pending')
   pending(@CurrentDevice() device: DevicePrincipal): Promise<PendingNotificationsResponse> {
     return this.notifications.claimChrome(device);
@@ -77,6 +79,7 @@ export class NotificationsController {
     return this.telegram.status(userId);
   }
 
+  @RateLimit('telegramStart')
   @Post('telegram/link/start')
   @HttpCode(200)
   telegramStart(@CurrentUserId() userId: string): Promise<TelegramLinkStartResponse> {
@@ -91,6 +94,7 @@ export class NotificationsController {
 
   /** Telegram Bot API webhook. Authenticated by the secret token header, not by a user. */
   @Public()
+  @RateLimit('telegramWebhook')
   @Post('telegram/webhook')
   @HttpCode(200)
   telegramWebhook(

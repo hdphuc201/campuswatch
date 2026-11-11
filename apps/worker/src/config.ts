@@ -25,6 +25,8 @@ const workerEnvSchema = z
       .refine((value) => Buffer.from(value, 'base64').length === 32, 'Must be 32 bytes, base64')
       .optional(),
     TELEGRAM_DISPATCH_INTERVAL_SECONDS: z.coerce.number().int().min(5).max(3600).default(30),
+    RETENTION_HISTORY_DAYS: z.coerce.number().int().min(30).max(3650).default(365),
+    RETENTION_OPERATIONAL_DAYS: z.coerce.number().int().min(7).max(3650).default(90),
   })
   .superRefine((env, context) => {
     if (env.TELEGRAM_BOT_TOKEN !== undefined && env.ENCRYPTION_KEY === undefined) {
@@ -61,6 +63,7 @@ export interface WorkerConfig {
   /** `null` when no bot token is configured: Telegram delivery is disabled. */
   readonly telegram: { readonly botToken: string; readonly encryptionKey: string } | null;
   readonly telegramDispatchIntervalSeconds: number;
+  readonly retention: { readonly historyDays: number; readonly operationalDays: number };
 }
 
 export class ConfigError extends Error {
@@ -107,6 +110,10 @@ export function loadWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerCo
         ? { botToken: data.TELEGRAM_BOT_TOKEN, encryptionKey: data.ENCRYPTION_KEY }
         : null,
     telegramDispatchIntervalSeconds: data.TELEGRAM_DISPATCH_INTERVAL_SECONDS,
+    retention: {
+      historyDays: data.RETENTION_HISTORY_DAYS,
+      operationalDays: data.RETENTION_OPERATIONAL_DAYS,
+    },
   };
 }
 

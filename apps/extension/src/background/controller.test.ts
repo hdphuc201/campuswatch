@@ -97,9 +97,14 @@ describe('extension lifecycle', () => {
     const { controller, backend } = createHarness();
     await controller.handle({ type: 'register', email: 'err@example.edu', password: PASSWORD });
 
+    // Registering an existing email with another password: same API answer, then sign-in fails.
     expect(
-      await controller.handle({ type: 'register', email: 'err@example.edu', password: PASSWORD }),
-    ).toMatchObject({ ok: false, error: { code: 'email_taken' } });
+      await controller.handle({
+        type: 'register',
+        email: 'err@example.edu',
+        password: 'a different long password',
+      }),
+    ).toMatchObject({ ok: false, error: { code: 'register_sign_in_failed' } });
     expect(
       await controller.handle({ type: 'signIn', email: 'err@example.edu', password: 'wrong' }),
     ).toMatchObject({ ok: false, error: { code: 'invalid_credentials' } });
@@ -151,5 +156,33 @@ describe('isCommand', () => {
     expect(isCommand({ type: 'deleteEverything' })).toBe(false);
     expect(isCommand('syncNow')).toBe(false);
     expect(isCommand(null)).toBe(false);
+  });
+});
+
+describe('privacy commands', () => {
+  it('exports with the password and rejects a wrong one', async () => {
+    const { controller } = createHarness();
+    await controller.handle({ type: 'register', email: 'export@example.edu', password: PASSWORD });
+
+    expect(await controller.handle({ type: 'exportData', password: 'wrong' })).toMatchObject({
+      ok: false,
+      error: { code: 'reauthentication_failed' },
+    });
+    const result = await controller.handle({ type: 'exportData', password: PASSWORD });
+    expect(result.ok && result.export?.profile.email).toBe('export@example.edu');
+  });
+
+  it('deleting data forgets the connection; deleting the account signs out locally', async () => {
+    const { controller, backend, store, state } = createHarness();
+    await controller.handle({ type: 'register', email: 'gone@example.edu', password: PASSWORD });
+    await controller.handle({ type: 'connect' });
+
+    await controller.handle({ type: 'deleteData', password: PASSWORD });
+    expect(await state.getConnection()).toBeUndefined();
+    expect(backend.connections.size).toBe(0);
+    expect((await controller.view()).signedIn).toBe(true);
+
+    await controller.handle({ type: 'deleteAccount', password: PASSWORD });
+    expect(await store.keys()).toEqual([]);
   });
 });

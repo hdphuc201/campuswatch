@@ -61,6 +61,24 @@ export class ExtensionController {
           : [];
         return { ok: true, view: await this.view(), changes };
       }
+      if (command.type === 'exportData') {
+        const exported = await this.reauthenticated(() =>
+          this.deps.api.exportData(command.password),
+        );
+        return { ok: true, view: await this.view(), export: exported };
+      }
+      if (command.type === 'deleteData') {
+        await this.reauthenticated(() => this.deps.api.deleteData(command.password));
+        await this.deps.state.clearConnection();
+        await this.deps.scheduler.clear();
+        return { ok: true, view: await this.view() };
+      }
+      if (command.type === 'deleteAccount') {
+        await this.reauthenticated(() => this.deps.api.deleteAccount(command.password));
+        await this.deps.state.clearAll();
+        await this.deps.scheduler.clear();
+        return { ok: true, view: await this.view() };
+      }
       if (
         command.type === 'getSettings' ||
         command.type === 'savePreferences' ||
@@ -124,15 +142,16 @@ export class ExtensionController {
       case 'getView':
         return undefined;
       case 'register':
+        // The API answers the same for new and existing emails (no account discovery).
+        await api.register(command.email, command.password);
         try {
-          await api.register(command.email, command.password);
+          await this.signIn(command.email, command.password);
         } catch (error) {
-          if (error instanceof ApiError && error.status === 409) {
-            throw new UserFacingError('email_taken');
+          if (error instanceof UserFacingError && error.code === 'invalid_credentials') {
+            throw new UserFacingError('register_sign_in_failed');
           }
           throw error;
         }
-        await this.signIn(command.email, command.password);
         return undefined;
       case 'signIn':
         await this.signIn(command.email, command.password);
@@ -178,6 +197,9 @@ export class ExtensionController {
       case 'syncNow':
         return engine.run('manual');
       case 'getChanges':
+      case 'exportData':
+      case 'deleteData':
+      case 'deleteAccount':
       case 'getSettings':
       case 'savePreferences':
       case 'telegramLink':
@@ -218,6 +240,18 @@ export class ExtensionController {
       api.listDeliveries(20),
     ]);
     return { preferences, telegram, deliveries };
+  }
+
+  /** Runs a password-confirmed request, mapping a wrong password to a clear error. */
+  private async reauthenticated<T>(request: () => Promise<T>): Promise<T> {
+    try {
+      return await request();
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 403) {
+        throw new UserFacingError('reauthentication_failed');
+      }
+      throw error;
+    }
   }
 
   private async signIn(email: string, password: string): Promise<void> {

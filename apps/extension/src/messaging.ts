@@ -1,5 +1,6 @@
 import type {
   ChangeEvent,
+  DataExport,
   Delivery,
   NotificationPreferences,
   TelegramLinkStatus,
@@ -22,7 +23,10 @@ export type Command =
   | { readonly type: 'getSettings' }
   | { readonly type: 'savePreferences'; readonly preferences: NotificationPreferences }
   | { readonly type: 'telegramLink' }
-  | { readonly type: 'telegramUnlink' };
+  | { readonly type: 'telegramUnlink' }
+  | { readonly type: 'exportData'; readonly password: string }
+  | { readonly type: 'deleteData'; readonly password: string }
+  | { readonly type: 'deleteAccount'; readonly password: string };
 
 /** Notification settings shown on the options page. */
 export interface SettingsView {
@@ -47,7 +51,8 @@ export interface ExtensionView {
 
 export type UserErrorCode =
   | 'invalid_credentials'
-  | 'email_taken'
+  | 'register_sign_in_failed'
+  | 'reauthentication_failed'
   | 'invalid_input'
   | 'session_expired'
   | 'network'
@@ -65,6 +70,8 @@ export type CommandResult =
       readonly changes?: ChangeEvent[];
       /** Present for settings commands. */
       readonly settings?: SettingsView;
+      /** Present for `exportData`. */
+      readonly export?: DataExport;
     }
   | {
       readonly ok: false;
@@ -87,6 +94,9 @@ export const COMMAND_TYPES: readonly Command['type'][] = [
   'savePreferences',
   'telegramLink',
   'telegramUnlink',
+  'exportData',
+  'deleteData',
+  'deleteAccount',
 ];
 
 /** Rejects anything that is not a well-formed command (messages can come from any page script). */
@@ -100,6 +110,9 @@ export function isCommand(message: unknown): message is Command {
   }
   if (type === 'register' || type === 'signIn') {
     return typeof email === 'string' && typeof password === 'string';
+  }
+  if (type === 'exportData' || type === 'deleteData' || type === 'deleteAccount') {
+    return typeof password === 'string';
   }
   if (type === 'savePreferences') {
     // Shape is validated against the shared schema by the controller.

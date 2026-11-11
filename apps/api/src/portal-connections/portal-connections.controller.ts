@@ -23,6 +23,7 @@ import {
   type DevicePrincipal,
 } from '../auth/principal.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { RateLimit } from '../security/rate-limit.js';
 import { PortalConnectionsService } from './portal-connections.service.js';
 
 @Controller('portal-connections')
@@ -73,6 +74,7 @@ export class PortalConnectionsController {
 
   /** Called by the extension with its device token; the device's owner must own the connection. */
   @DeviceAuth()
+  @RateLimit('probe')
   @Post(':id/probe')
   @HttpCode(200)
   probe(

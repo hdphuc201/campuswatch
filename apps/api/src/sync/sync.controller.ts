@@ -19,6 +19,7 @@ import {
   type DevicePrincipal,
 } from '../auth/principal.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { RateLimit } from '../security/rate-limit.js';
 import { SyncService } from './sync.service.js';
 
 @Controller()
@@ -27,6 +28,7 @@ export class SyncController {
 
   /** Snapshot upload from the extension (device token). Idempotent per `syncRunId`. */
   @DeviceAuth()
+  @RateLimit('snapshot')
   @Post('sync-runs')
   @HttpCode(200)
   ingest(

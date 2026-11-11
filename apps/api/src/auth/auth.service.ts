@@ -5,7 +5,7 @@ import type {
   RegisterRequest,
   UserProfile,
 } from '@campuswatch/contracts';
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { ApiConfig } from '../config.js';
 import { API_CONFIG } from '../config.module.js';
@@ -26,22 +26,19 @@ export class AuthService {
     private readonly accessTokens: AccessTokenService,
   ) {}
 
-  async register(input: RegisterRequest): Promise<AuthTokensResponse> {
+  /**
+   * Creates the account if the email is new. For an existing email it does the same work
+   * (password hashing) and changes nothing, so responses and timing do not reveal accounts.
+   */
+  async register(input: RegisterRequest): Promise<void> {
     const passwordHash = await this.passwords.hash(input.password);
-    let userId: string;
     try {
-      const [user] = await this.db
-        .insert(users)
-        .values({ email: input.email, passwordHash })
-        .returning({ id: users.id });
-      userId = user!.id;
+      await this.db.insert(users).values({ email: input.email, passwordHash });
     } catch (error) {
-      if (isUniqueViolation(error)) {
-        throw new ConflictException('An account with this email already exists');
+      if (!isUniqueViolation(error)) {
+        throw error;
       }
-      throw error;
     }
-    return this.startSession(userId, randomUUID());
   }
 
   async login(input: LoginRequest): Promise<AuthTokensResponse> {

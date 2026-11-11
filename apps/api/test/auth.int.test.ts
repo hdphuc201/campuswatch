@@ -33,8 +33,14 @@ describe('identity (integration)', () => {
       payload: { email: '  New.Student@Example.EDU ', password: 'a long enough password' },
     });
 
-    expect(response.statusCode).toBe(201);
-    const tokens = authTokensResponseSchema.parse(response.json());
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({ status: 'accepted' });
+    const login = await app().inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { email: 'new.student@example.edu', password: 'a long enough password' },
+    });
+    const tokens = authTokensResponseSchema.parse(login.json());
     const me = await app().inject({
       method: 'GET',
       url: '/auth/me',
@@ -44,16 +50,34 @@ describe('identity (integration)', () => {
     expect(me.body).not.toMatch(/password|hash/i);
   });
 
-  it('rejects a duplicate email regardless of case', async () => {
-    await registerUser(app(), 'dup@example.edu');
+  it('does not reveal whether an email is registered, and never changes an existing account', async () => {
+    await registerUser(app(), 'dup@example.edu', 'the original password');
 
-    const response = await app().inject({
+    const duplicate = await app().inject({
       method: 'POST',
       url: '/auth/register',
       payload: { email: 'DUP@example.edu', password: 'another long password' },
     });
+    const fresh = await app().inject({
+      method: 'POST',
+      url: '/auth/register',
+      payload: { email: 'fresh@example.edu', password: 'another long password' },
+    });
 
-    expect(response.statusCode).toBe(409);
+    expect(duplicate.statusCode).toBe(202);
+    expect(duplicate.json()).toEqual(fresh.json());
+    const hijack = await app().inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { email: 'dup@example.edu', password: 'another long password' },
+    });
+    expect(hijack.statusCode).toBe(401);
+    const owner = await app().inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: { email: 'dup@example.edu', password: 'the original password' },
+    });
+    expect(owner.statusCode).toBe(200);
   });
 
   it('rejects invalid bodies, including client-supplied ownership fields', async () => {
@@ -68,7 +92,10 @@ describe('identity (integration)', () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toMatchObject({ message: 'Validation failed' });
+    expect(response.json()).toMatchObject({
+      code: 'validation_failed',
+      message: 'Validation failed',
+    });
   });
 
   it('gives the same answer for an unknown email and a wrong password', async () => {
@@ -92,7 +119,10 @@ describe('identity (integration)', () => {
 
     expect(wrongPassword.statusCode).toBe(401);
     expect(unknownEmail.statusCode).toBe(401);
-    expect(wrongPassword.json()).toEqual(unknownEmail.json());
+    // Identical apart from the per-request correlation id.
+    const withoutRequestId = ({ requestId: _id, ...body }: Record<string, unknown>) => body;
+    expect(withoutRequestId(wrongPassword.json())).toEqual(withoutRequestId(unknownEmail.json()));
+    expect(wrongPassword.json()).toMatchObject({ code: 'unauthorized' });
     expect(correct.statusCode).toBe(200);
   });
 

@@ -149,6 +149,14 @@ export const portalConnections = pgTable(
     consentVersion: text('consent_version').notNull(),
     lastProbedAt: timestamp('last_probed_at', { withTimezone: true }),
     lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+    /**
+     * Sources that have synced successfully at least once. The first successful sync of a
+     * source is a baseline (no change events). Kept here so retention can prune sync_runs.
+     */
+    syncedSources: text('synced_sources')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     createdAt: createdAt(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

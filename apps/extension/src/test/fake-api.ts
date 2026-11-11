@@ -84,11 +84,11 @@ export function createFakeApi() {
       : undefined;
 
     if (method === 'POST' && path === '/auth/register') {
-      if (users.has(body.email!)) {
-        return json(409, { message: 'An account with this email already exists' });
+      // Same answer whether or not the email exists; an existing account is never changed.
+      if (!users.has(body.email!)) {
+        users.set(body.email!, body.password!);
       }
-      users.set(body.email!, body.password!);
-      return json(201, issueTokens(body.email!));
+      return json(202, { status: 'accepted' });
     }
     if (method === 'POST' && path === '/auth/login') {
       return users.get(body.email!) === body.password
@@ -184,6 +184,41 @@ export function createFakeApi() {
     }
     if (path === '/notifications') {
       return json(200, { deliveries: [] });
+    }
+    if (path.startsWith('/privacy/')) {
+      if (users.get(userEmail) !== body.password) {
+        return json(403, { code: 'reauthentication_failed' });
+      }
+      if (path === '/privacy/account') {
+        users.delete(userEmail);
+      }
+      if (path === '/privacy/data' || path === '/privacy/account') {
+        for (const [id, connection] of connections) {
+          if (connection.userEmail === userEmail) {
+            connections.delete(id);
+          }
+        }
+        return json(200, {
+          status: 'deleted',
+          scope: path.endsWith('account') ? 'account' : 'data',
+        });
+      }
+      return json(200, {
+        exportedAt: new Date().toISOString(),
+        profile: {
+          id: '00000000-0000-4000-8000-0000000000ff',
+          email: userEmail,
+          createdAt: new Date().toISOString(),
+        },
+        devices: [],
+        connections: [],
+        consents: [],
+        entities: [],
+        changes: [],
+        notificationPreferences: notifications.preferences,
+        deliveries: [],
+        telegram: { linked: false, linkedAt: null },
+      });
     }
     if (path === '/telegram/link/start') {
       return notifications.telegramAvailable

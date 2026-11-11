@@ -121,7 +121,7 @@ export class TelegramService {
     if (!nonce) {
       await this.reply(
         chatId,
-        'To link this chat, open CampusWatch → Notification settings → Link Telegram.',
+        'To link this chat, open CampusWatch → Settings and data → Link Telegram.',
       );
       return;
     }

@@ -20,10 +20,22 @@ describe('loadApiConfig', () => {
     expect(loadApiConfig({}).auth.secret).not.toBe(loadApiConfig({}).auth.secret);
   });
 
-  it('requires DATABASE_URL and AUTH_SECRET in production', () => {
+  it('requires DATABASE_URL, AUTH_SECRET, and REDIS_URL in production', () => {
     expect(() => loadApiConfig({ NODE_ENV: 'production' })).toThrow(
-      /DATABASE_URL: Required in production; AUTH_SECRET: Required in production/,
+      /DATABASE_URL: Required in production; AUTH_SECRET: Required in production; REDIS_URL: Required in production/,
     );
+  });
+
+  it('never allows rate limits to be disabled in production', () => {
+    expect(() =>
+      loadApiConfig({
+        NODE_ENV: 'production',
+        DATABASE_URL: 'postgresql://db/campuswatch',
+        AUTH_SECRET: 'x'.repeat(32),
+        REDIS_URL: 'redis://cache:6379',
+        RATE_LIMITS_ENABLED: 'false',
+      }),
+    ).toThrow(/Rate limits cannot be disabled in production/);
   });
 
   it('rejects a short AUTH_SECRET without echoing it', () => {

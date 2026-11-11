@@ -3,6 +3,8 @@ import {
   authTokensResponseSchema,
   type ChangeEvent,
   changeListResponseSchema,
+  type DataExport,
+  dataExportSchema,
   type Delivery,
   deliveryListResponseSchema,
   type NotificationPreferences,
@@ -214,6 +216,20 @@ export class CampusWatchApi {
 
   async telegramUnlink(): Promise<void> {
     await this.request('DELETE', '/telegram/link', { kind: 'user' });
+  }
+
+  exportData(password: string): Promise<DataExport> {
+    return this.request('POST', '/privacy/export', { kind: 'user' }, { password }, (body) =>
+      dataExportSchema.parse(body),
+    );
+  }
+
+  async deleteData(password: string): Promise<void> {
+    await this.request('DELETE', '/privacy/data', { kind: 'user' }, { password });
+  }
+
+  async deleteAccount(password: string): Promise<void> {
+    await this.request('DELETE', '/privacy/account', { kind: 'user' }, { password });
   }
 
   private async request<T = void>(

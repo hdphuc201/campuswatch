@@ -92,7 +92,9 @@ export function describeStatus(view: ExtensionView, now: Date): StatusDescriptio
 
 export const ERROR_MESSAGES: Record<UserErrorCode, string> = {
   invalid_credentials: 'Email or password is incorrect.',
-  email_taken: 'An account with this email already exists. Sign in instead.',
+  register_sign_in_failed:
+    'We could not sign you in. If you already have an account with this email, sign in with that password.',
+  reauthentication_failed: 'Password is incorrect.',
   invalid_input: 'Check the email address and use a password of at least 12 characters.',
   session_expired: 'Your CampusWatch session ended. Please sign in again.',
   network: 'Cannot reach CampusWatch. Check your internet connection.',

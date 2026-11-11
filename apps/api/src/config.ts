@@ -37,6 +37,18 @@ const apiEnvSchema = z
       .string()
       .refine((value) => Buffer.from(value, 'base64').length === 32, 'Must be 32 bytes, base64')
       .optional(),
+    /** Shared rate-limit counters. Without it, limits are per process (development only). */
+    REDIS_URL: z
+      .url({ protocol: /^rediss?$/, error: 'Must be a redis:// or rediss:// URL' })
+      .optional(),
+    RATE_LIMITS_ENABLED: z.enum(['true', 'false']).default('true'),
+    /** Number of trusted reverse proxies in front of the API (for client IPs). */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
+    /** Bearer token for GET /ops/metrics. Unset disables the endpoint. */
+    OPS_METRICS_TOKEN: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{32,256}$/, 'Must be 32-256 characters of A-Z, a-z, 0-9, _ or -')
+      .optional(),
   })
   .superRefine((env, context) => {
     const telegramKeys = [
@@ -59,10 +71,17 @@ const apiEnvSchema = z
     if (env.NODE_ENV !== 'production') {
       return;
     }
-    for (const key of ['DATABASE_URL', 'AUTH_SECRET'] as const) {
+    for (const key of ['DATABASE_URL', 'AUTH_SECRET', 'REDIS_URL'] as const) {
       if (env[key] === undefined) {
         context.addIssue({ code: 'custom', path: [key], message: 'Required in production' });
       }
+    }
+    if (env.RATE_LIMITS_ENABLED === 'false') {
+      context.addIssue({
+        code: 'custom',
+        path: ['RATE_LIMITS_ENABLED'],
+        message: 'Rate limits cannot be disabled in production',
+      });
     }
   });
 
@@ -82,6 +101,11 @@ export interface ApiConfig {
     readonly accessTokenTtlSeconds: number;
     readonly refreshTokenTtlDays: number;
   };
+  readonly redisUrl: string | null;
+  readonly rateLimitsEnabled: boolean;
+  readonly trustProxyHops: number;
+  /** `null` disables the metrics endpoint. */
+  readonly opsMetricsToken: string | null;
   /** `null` when no Telegram bot is configured: Telegram delivery is disabled. */
   readonly telegram: {
     readonly botToken: string;
@@ -123,6 +147,10 @@ export function loadApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
       accessTokenTtlSeconds: data.ACCESS_TOKEN_TTL_SECONDS,
       refreshTokenTtlDays: data.REFRESH_TOKEN_TTL_DAYS,
     },
+    redisUrl: data.REDIS_URL ?? null,
+    rateLimitsEnabled: data.RATE_LIMITS_ENABLED === 'true',
+    trustProxyHops: data.TRUST_PROXY_HOPS,
+    opsMetricsToken: data.OPS_METRICS_TOKEN ?? null,
     telegram:
       data.TELEGRAM_BOT_TOKEN &&
       data.TELEGRAM_BOT_USERNAME &&

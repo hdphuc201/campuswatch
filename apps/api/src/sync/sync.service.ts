@@ -206,6 +206,12 @@ export class SyncService {
         .set({
           status: healthAfterSync(results),
           updatedAt: now,
+          syncedSources: [
+            ...new Set([
+              ...connection.syncedSources,
+              ...results.filter((result) => result.status === 'ok').map((result) => result.source),
+            ]),
+          ],
           ...(okCount > 0 ? { lastSyncAt: now } : {}),
         })
         .where(eq(portalConnections.id, connection.id))
@@ -257,17 +263,7 @@ export class SyncService {
     );
 
     // The first successful sync of a source is a baseline: store it without change events.
-    const [prior] = await tx
-      .select({ id: syncRuns.id })
-      .from(syncRuns)
-      .where(
-        and(
-          eq(syncRuns.connectionId, connection.id),
-          sql`${syncRuns.sourceResults} @> ${JSON.stringify([{ source, status: 'ok' }])}::jsonb`,
-        ),
-      )
-      .limit(1);
-    const baseline = !prior;
+    const baseline = !connection.syncedSources.includes(source);
 
     const now = new Date();
     for (const batch of chunks(next)) {

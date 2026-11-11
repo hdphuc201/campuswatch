@@ -18,7 +18,13 @@ import {
   TELEGRAM_DISPATCHER,
 } from './notifications/notifications.processor.js';
 import { TelegramDispatcher } from './notifications/telegram-dispatcher.js';
-import { SYSTEM_QUEUE, SystemProcessor } from './system/system.processor.js';
+import { RetentionService } from './system/retention.js';
+import {
+  RETENTION_SERVICE,
+  SYSTEM_QUEUE,
+  SystemProcessor,
+  SystemScheduler,
+} from './system/system.processor.js';
 import { DATABASE, PG_POOL, WORKER_CONFIG } from './tokens.js';
 
 @Injectable()
@@ -66,8 +72,14 @@ export class WorkerModule {
                 )
               : null,
         },
+        {
+          provide: RETENTION_SERVICE,
+          inject: [DATABASE],
+          useFactory: (db: NodePgDatabase) => new RetentionService(db, config.retention),
+        },
         PoolLifecycle,
         SystemProcessor,
+        SystemScheduler,
         NotificationsProcessor,
         NotificationsScheduler,
       ],
