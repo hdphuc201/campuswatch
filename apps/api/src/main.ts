@@ -6,10 +6,18 @@ import { enabledLogLevels, loadApiConfig } from './config.js';
 
 async function bootstrap(): Promise<void> {
   const config = loadApiConfig();
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
-    logger: enabledLogLevels(config.logLevel),
-  });
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule.register(config),
+    new FastifyAdapter(),
+    { logger: enabledLogLevels(config.logLevel) },
+  );
   app.enableShutdownHooks();
+  if (config.auth.secretIsEphemeral) {
+    Logger.warn(
+      'AUTH_SECRET is not set; using a random secret. Tokens stop working on restart.',
+      'Bootstrap',
+    );
+  }
   await app.listen(config.port, config.host);
   Logger.log(`API listening on http://${config.host}:${config.port}`, 'Bootstrap');
 }

@@ -50,6 +50,57 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Check database migrations match the schema
+        run: |
+          pnpm db:generate
+          if [ -n "$(git status --porcelain -- apps/api/drizzle)" ]; then
+            echo "::error::apps/api/src/database/schema.ts changed without a migration. Run pnpm db:generate and commit the result."
+            git status --porcelain -- apps/api/drizzle
+            exit 1
+          fi
+
+  integration:
+    name: Integration tests (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: campuswatch
+          POSTGRES_PASSWORD: campuswatch_ci
+          POSTGRES_DB: campuswatch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U campuswatch"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway CI-only database server; tests create and drop their own databases.
+      TEST_DATABASE_URL: postgresql://campuswatch:campuswatch_ci@127.0.0.1:5432/postgres
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Integration tests (includes User A/B isolation)
+        run: pnpm test:integration
+
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest

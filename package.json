@@ -14,8 +14,11 @@
     "format": "prettier --write .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
     "infra:up": "docker compose --project-directory . -f infra/docker-compose.yml up -d --wait",
-    "infra:down": "docker compose --project-directory . -f infra/docker-compose.yml down"
+    "infra:down": "docker compose --project-directory . -f infra/docker-compose.yml down",
+    "db:migrate": "turbo run db:migrate",
+    "db:generate": "pnpm --filter @campuswatch/api db:generate"
   },
   "prettier": "@campuswatch/config/prettier",
   "devDependencies": {

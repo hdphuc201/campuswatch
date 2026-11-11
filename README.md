@@ -8,15 +8,16 @@ The Backend never stores Portal passwords, cookies, or CSRF tokens, and monitori
 while Chrome is running. See [ADR-0001](docs/ADR/0001-extension-first.md) and the
 [implementation plan](docs/CAMPUSWATCH_OFFICIAL_IMPLEMENTATION_PLAN.md).
 
-> **Status: P1 (monorepo foundation).** No Portal collector exists yet; the extension does
-> not read the Portal.
+> **Status: P2 (identity and multi-user core).** The API has CampusWatch accounts, devices,
+> and Portal connections with per-user isolation ([ADR-0002](docs/ADR/0002-identity-and-isolation.md)).
+> No Portal collector exists yet; the extension does not read the Portal.
 
 ## Repository layout
 
 | Path                   | Purpose                                                                 |
 | ---------------------- | ----------------------------------------------------------------------- |
 | `apps/extension`       | Chrome Extension: WXT, React, TypeScript, Manifest V3                   |
-| `apps/api`             | HTTP API: NestJS on Fastify (`GET /health`)                             |
+| `apps/api`             | HTTP API: NestJS on Fastify, PostgreSQL via Drizzle                     |
 | `apps/worker`          | Background worker: NestJS and BullMQ                                    |
 | `packages/contracts`   | Shared Zod schemas and DTO types                                        |
 | `packages/portal-core` | Read-only Portal adapter contract, CITD capabilities, fingerprint, diff |
@@ -36,7 +37,7 @@ while Chrome is running. See [ADR-0001](docs/ADR/0001-extension-first.md) and th
 ```bash
 pnpm install
 pnpm infra:up        # PostgreSQL 16 + Redis 7, waits until healthy
-pnpm build
+pnpm db:migrate      # builds the API and applies database migrations
 pnpm dev             # API, worker, and extension in watch mode
 ```
 
@@ -48,14 +49,16 @@ Stop the infrastructure with `pnpm infra:down`.
 ## Checks
 
 ```bash
-pnpm lint        # Prettier check + type-aware ESLint
-pnpm typecheck   # strict TypeScript
-pnpm test        # Vitest
+pnpm lint               # Prettier check + type-aware ESLint
+pnpm typecheck          # strict TypeScript
+pnpm test               # Vitest unit tests
+pnpm test:integration   # API against PostgreSQL, incl. User A/B isolation (needs infra:up)
 pnpm build
 ```
 
-CI (`.github/workflows/ci.yml`) runs these on Node.js 22 with a frozen lockfile and scans
-the full git history for secrets with gitleaks.
+CI (`.github/workflows/ci.yml`) runs these on Node.js 22 with a frozen lockfile, checks that
+database migrations match the schema, runs the integration tests against PostgreSQL 16, and
+scans the full git history for secrets with gitleaks.
 
 ## Load the extension in Chrome
 

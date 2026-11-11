@@ -23,6 +23,8 @@ catalog:
 onlyBuiltDependencies:
   - '@swc/core'
 
-# Optional native speed-up for BullMQ's msgpackr; the pure JavaScript fallback is used.
 ignoredBuiltDependencies:
+  # drizzle-kit's esbuild runs from its platform binary package; its install check is not needed.
+  - esbuild
+  # Optional native speed-up for BullMQ's msgpackr; the pure JavaScript fallback is used.
   - msgpackr-extract
