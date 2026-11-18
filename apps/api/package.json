@@ -22,7 +22,7 @@
     "@campuswatch/portal-core": "workspace:*",
     "@nestjs/common": "catalog:",
     "@nestjs/core": "catalog:",
-    "@nestjs/platform-fastify": "12.4.2",
+    "@nestjs/platform-fastify": "12.5.0",
     "@node-rs/argon2": "2.2.2",
     "drizzle-orm": "0.45.4",
     "ioredis": "6.0.0",
